@@ -149,7 +149,7 @@ struct light_rgb_t {
     uint8_t* rgb_command_topic;
     uint8_t* rgb_state_topic;
     uint8_t* rgb_value_template;
-    uint8_t rad;
+    uint8_t red;
     uint8_t green;
     uint8_t blue;
 };

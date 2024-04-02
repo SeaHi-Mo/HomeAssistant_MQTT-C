@@ -1,0 +1,566 @@
+
+/**
+ * @file homeAssistantMQTT.c
+ * @author your name (you@domain.com)
+ * @brief
+ * @version 0.1
+ * @date 2024-02-03
+ *
+ * @copyright Copyright (c) 2024
+ *
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "FreeRTOS.h"
+#include "aiio_wifi.h"
+#include "homeAssistantMQTT.h"
+#include "log.h"
+#include "cJSON.h"
+#define DBG_TAG "homeAssistantMQTT"
+
+static aiio_mqtt_client_config_t ha_mqtt_cfg;
+static homeAssisatnt_device_t* ha_device;
+
+static uint8_t STA_MAC[6] = { 0 };
+
+static cJSON* homeAssistant_device_create(void)
+{
+    if (ha_device==NULL)
+    {
+        LOG_E("device is NULL");
+        return;
+    }
+    cJSON* root = cJSON_CreateObject();
+    if (ha_device->name!=NULL) cJSON_AddStringToObject(root, "name", ha_device->name);
+    if (ha_device->hw_version!=NULL) cJSON_AddStringToObject(root, "hw_version", ha_device->hw_version);
+    if (ha_device->identifiers!=NULL) {
+        cJSON* identifiers = cJSON_CreateArray();
+        cJSON_AddItemToObject(root, "identifiers", identifiers);
+        cJSON_AddItemToArray(identifiers, cJSON_CreateString(ha_device->identifiers));
+    }
+    if (ha_device->manufacturer!=NULL)cJSON_AddStringToObject(root, "manufacturer", ha_device->manufacturer);
+    if (ha_device->model!=NULL)cJSON_AddStringToObject(root, "model", ha_device->model);
+    if (ha_device->suggest_area!=NULL)cJSON_AddStringToObject(root, "suggest_area", ha_device->suggest_area);
+    if (ha_device->sw_version!=NULL)cJSON_AddStringToObject(root, "sw_version", ha_device->sw_version);
+    if (ha_device->via_device!=NULL)cJSON_AddStringToObject(root, "via_device", ha_device->via_device);
+
+    cJSON* connencts = cJSON_CreateArray();
+    cJSON* MAC = cJSON_CreateArray();
+    cJSON_AddItemToArray(connencts, MAC);
+    char* mac_str = pvPortMalloc(32);
+    memset(mac_str, 0, 32);
+    sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5]);
+    cJSON_AddItemToArray(MAC, cJSON_CreateString("mac"));
+    cJSON_AddItemToArray(MAC, cJSON_CreateString(mac_str));
+    cJSON_AddItemToObject(root, "connections", connencts);
+    vPortFree(mac_str);
+    return root;
+}
+/**
+ * @brief homeAssistant_create_switch_data 创建开关实体配置数据
+ *
+ * @param switch_entity
+ * @param device_json
+*/
+static void homeAssistant_create_switch_data(ha_sw_entity_t* switch_entity, cJSON* device_json)
+{
+    if (switch_entity==NULL) {
+        LOG_E("entity switch buff is NULL");
+        return;
+    }
+    cJSON* root = cJSON_CreateObject();
+    if (switch_entity->name!=NULL)cJSON_AddStringToObject(root, "name", switch_entity->name);
+    if (switch_entity->device_class!=NULL)cJSON_AddStringToObject(root, "device_class", switch_entity->device_class);
+    if (switch_entity->unique_id!=NULL)cJSON_AddStringToObject(root, "unique_id", switch_entity->unique_id);
+    if (switch_entity->object_id!=NULL)cJSON_AddStringToObject(root, "object_id", switch_entity->object_id);
+
+    if (switch_entity->command_topic==NULL) {
+        switch_entity->command_topic = pvPortMalloc(128);
+        memset(switch_entity->command_topic, 0, 128);
+        sprintf(switch_entity->command_topic, "%s/%s/set", ha_device->name, switch_entity->unique_id);
+    }
+    cJSON_AddStringToObject(root, "command_topic", switch_entity->command_topic);
+    if (switch_entity->state_topic==NULL) {
+        switch_entity->state_topic = pvPortMalloc(128);
+        memset(switch_entity->state_topic, 0, 128);
+        sprintf(switch_entity->state_topic, "%s/%s/state", ha_device->name, switch_entity->unique_id);
+    }
+    cJSON_AddStringToObject(root, "state_topic", switch_entity->state_topic);
+    if (switch_entity->payload_off==NULL)switch_entity->payload_off = "OFF";
+    if (switch_entity->payload_on==NULL) switch_entity->payload_on = "ON";
+
+    cJSON_AddStringToObject(root, "payload_off", switch_entity->payload_off);
+    cJSON_AddStringToObject(root, "payload_on", switch_entity->payload_on);
+
+    if (switch_entity->availability_topic!=NULL)cJSON_AddStringToObject(root, "availability_topic", switch_entity->availability_topic);
+    else cJSON_AddStringToObject(root, "availability_topic", ha_device->availability_topic);
+    if (switch_entity->payload_available!=NULL)cJSON_AddStringToObject(root, "payload_available", switch_entity->payload_available);
+    else cJSON_AddStringToObject(root, "payload_available", ha_device->payload_available);
+    if (switch_entity->payload_not_available!=NULL)cJSON_AddStringToObject(root, "payload_not_available", switch_entity->payload_not_available);
+    else cJSON_AddStringToObject(root, "payload_not_available", ha_device->payload_not_available);
+
+    if (device_json!=NULL)cJSON_AddItemToObject(root, "device", device_json);
+    if (switch_entity->icon!=NULL) cJSON_AddStringToObject(root, "icon", switch_entity->icon);
+
+    switch_entity->switch_config_data = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+}
+
+/**
+ * @brief entity_swith_add_node
+ *         添加一个开关实体
+ * @param switch_new_node
+*/
+static void entity_swith_add_node(ha_sw_entity_t* switch_new_node)
+{
+    assert(ha_device->entity_switch->switch_list);
+
+    //添加新的节点
+    ha_sw_entity_t* switch_list_handle = ha_device->entity_switch->switch_list->prev;
+    //开始创建新的实体数据
+    homeAssistant_create_switch_data(switch_new_node, homeAssistant_device_create());
+    if (switch_new_node->entity_config_topic==NULL) {
+        switch_new_node->entity_config_topic = pvPortMalloc(128);
+        memset(switch_new_node->entity_config_topic, 0, 128);
+        sprintf(switch_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_SWITCH, switch_new_node->unique_id);
+    }
+
+    if (ha_device->mqtt_info.mqtt_connect_status) {
+        aiio_mqtt_client_publish(ha_device->mqtt_client, switch_new_node->entity_config_topic, switch_new_node->switch_config_data, strlen(switch_new_node->switch_config_data), 1, 0);
+        if (switch_new_node->command_topic!=NULL)aiio_mqtt_client_subscribe(ha_device->mqtt_client, switch_new_node->command_topic, 1);
+    }
+    else {
+        LOG_E("MQTT server is diconnenct");
+    }
+    //插入节点
+    switch_list_handle->next = switch_new_node;
+    switch_new_node->prev = switch_list_handle;
+    switch_new_node->next = ha_device->entity_switch->switch_list;
+    ha_device->entity_switch->switch_list->prev = switch_new_node;
+ 
+    vPortFree(switch_new_node->switch_config_data);
+}
+
+static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON* device_json)
+{
+    if (light_entity==NULL) {
+        LOG_E("entity light buff is NULL");
+        return;
+    }
+    cJSON* root = cJSON_CreateObject();
+    if (light_entity->name!=NULL)cJSON_AddStringToObject(root, "name", light_entity->name);
+    if (light_entity->device_class!=NULL)cJSON_AddStringToObject(root, "device_class", light_entity->device_class);
+    if (light_entity->unique_id!=NULL)cJSON_AddStringToObject(root, "unique_id", light_entity->unique_id);
+    if (light_entity->object_id!=NULL)cJSON_AddStringToObject(root, "object_id", light_entity->object_id);
+    if (light_entity->icon!=NULL)cJSON_AddStringToObject(root, "icon", light_entity->icon);
+    if (light_entity->availability_template!=NULL)cJSON_AddStringToObject(root, "availability_template", light_entity->availability_template);
+    if (light_entity->availability_topic!=NULL)cJSON_AddStringToObject(root, "availability_topic", light_entity->availability_topic);
+    else cJSON_AddStringToObject(root, "availability_topic", ha_device->availability_topic);
+    if (light_entity->payload_available!=NULL)cJSON_AddStringToObject(root, "payload_available", light_entity->payload_available);
+    else  cJSON_AddStringToObject(root, "payload_available", ha_device->payload_available);
+    if (light_entity->payload_not_available!=NULL)cJSON_AddStringToObject(root, "payload_not_available", light_entity->payload_not_available);
+    else cJSON_AddStringToObject(root, "payload_not_available", ha_device->payload_not_available);
+
+    if (light_entity->command_topic==NULL)
+    {
+        light_entity->command_topic = pvPortMalloc(128);
+        memset(light_entity->command_topic, 0, 128);
+        sprintf(light_entity->command_topic, "%s/%s/set", ha_device->name, light_entity->unique_id);
+    }
+    if (light_entity->state_topic==NULL)
+    {
+        light_entity->state_topic = pvPortMalloc(128);
+        memset(light_entity->state_topic, 0, 128);
+        sprintf(light_entity->state_topic, "%s/%s/state", ha_device->name, light_entity->unique_id);
+    }
+
+    cJSON_AddStringToObject(root, "command_topic", light_entity->command_topic);
+    cJSON_AddStringToObject(root, "state_topic", light_entity->state_topic);
+    if (light_entity->payload_off!=NULL)cJSON_AddStringToObject(root, "payload_off", light_entity->payload_off);
+    if (light_entity->payload_on!=NULL)cJSON_AddStringToObject(root, "payload_on", light_entity->payload_on);
+    //brightness
+    if (light_entity->brightness.brightness_command_template!=NULL)cJSON_AddStringToObject(root, "brightness_command_template", light_entity->brightness.brightness_command_template);
+    if (light_entity->brightness.brightness_command_topic!=NULL) cJSON_AddStringToObject(root, "brightness_command_topic", light_entity->brightness.brightness_command_topic);
+    if (light_entity->brightness.brightness_state_topic!=NULL)cJSON_AddStringToObject(root, "brightness_state_topic", light_entity->brightness.brightness_state_topic);
+    if (light_entity->brightness.brightness_scale!=NULL)cJSON_AddStringToObject(root, "brightness_scale", light_entity->brightness.brightness_scale);
+    if (light_entity->brightness.brightness_value_template!=NULL)cJSON_AddStringToObject(root, "brightness_value_template", light_entity->brightness.brightness_value_template);
+    // rbgw
+    if (light_entity->rgbw.rgbw_command_template!=NULL)cJSON_AddStringToObject(root, "rgbw_command_template", light_entity->rgbw.rgbw_command_template);
+    if (light_entity->rgbw.rgbw_command_topic!=NULL) cJSON_AddStringToObject(root, "rgbw_command_topic", light_entity->rgbw.rgbw_command_topic);
+    if (light_entity->rgbw.rgbw_state_topic!=NULL)  cJSON_AddStringToObject(root, "rgbw_state_topic", light_entity->rgbw.rgbw_state_topic);
+    if (light_entity->rgbw.rgbw_value_template!=NULL)cJSON_AddStringToObject(root, "rgbw_value_template", light_entity->rgbw.rgbw_value_template);
+    //rbg
+    if (light_entity->rgb.rgb_command_template!=NULL)cJSON_AddStringToObject(root, "rgb_command_template", light_entity->rgb.rgb_command_template);
+    if (light_entity->rgb.rgb_command_topic!=NULL) cJSON_AddStringToObject(root, "rgb_command_topic", light_entity->rgb.rgb_command_topic);
+    if (light_entity->rgb.rgb_state_topic != NULL)cJSON_AddStringToObject(root, "rgb_state_topic", light_entity->rgb.rgb_state_topic);
+    if (light_entity->rgb.rgb_value_template!=NULL)cJSON_AddStringToObject(root, "rgb_value_template", light_entity->rgb.rgb_value_template);
+    //添加设备信息
+    if (device_json!=NULL)cJSON_AddItemToObject(root, "device", device_json);
+
+    light_entity->light_config_data = cJSON_PrintUnformatted(root);;
+
+    cJSON_Delete(root);
+}
+
+
+
+static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
+{
+    // assert(ha_device->entity_light->light_list);
+    ha_lh_entity_t* light_list_handle = ha_device->entity_light->light_list->prev;
+    //开始创建新的实体数据
+    homeAssistant_create_light_data(light_new_node, homeAssistant_device_create());
+    if (light_new_node->entity_config_topic==NULL) {
+        light_new_node->entity_config_topic = pvPortMalloc(128);
+        memset(light_new_node->entity_config_topic, 0, 128);
+        sprintf(light_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_LIGHT, light_new_node->unique_id);
+    }
+    if (ha_device->mqtt_info.mqtt_connect_status) {
+        aiio_mqtt_client_publish(ha_device->mqtt_client, light_new_node->entity_config_topic, light_new_node->light_config_data, strlen(light_new_node->light_config_data), 1, 0);
+        if (light_new_node->command_topic!=NULL)aiio_mqtt_client_subscribe(ha_device->mqtt_client, light_new_node->command_topic, 1);
+        if (light_new_node->rgbw.rgbw_command_topic!=NULL)aiio_mqtt_client_subscribe(ha_device->mqtt_client, light_new_node->rgbw.rgbw_command_topic, 1);
+        if (light_new_node->brightness.brightness_command_topic!=NULL)aiio_mqtt_client_subscribe(ha_device->mqtt_client, light_new_node->brightness.brightness_command_topic, 1);
+        if (light_new_node->rgb.rgb_command_topic!=NULL)aiio_mqtt_client_subscribe(ha_device->mqtt_client, light_new_node->rgb.rgb_command_topic, 1);
+    }
+    else {
+        LOG_E("MQTT server is diconnenct");
+    }
+    //插入节点
+    light_list_handle->next = light_new_node;
+    light_new_node->prev = light_list_handle;
+    light_new_node->next = ha_device->entity_light->light_list;
+    ha_device->entity_light->light_list->prev = light_new_node;
+       LOG_W("light_new_node addr: %p  next %p",light_new_node,light_new_node->next);
+    vPortFree(light_new_node->light_config_data);
+}
+
+
+static void log_error_if_nonzero(const char* message, int error_code)
+{
+    if (error_code != 0) {
+        LOG_E("Last error %s: 0x%x", message, error_code);
+    }
+}
+/**
+ * @brief homeAssistant_get_light_rgb
+ *        获取RGB 值，适用于没有使用格式要求的情况，简单解析出RGB三基色值
+ * @param light_entity
+ * @param rgb_data
+*/
+static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char* rgb_data)
+{
+    if (light_entity==NULL || rgb_data==NULL) {
+        LOG_E("entity light buff is NULL");
+        return;
+    }
+
+    if (light_entity->rgb.rgb_command_template==NULL) {
+        char* rgb = strtok(rgb_data, ",");
+        if (rgb)light_entity->rgb.rad = atoi(rgb);
+        rgb = strtok(NULL, ",");
+        if (rgb) light_entity->rgb.green = atoi(rgb);
+        rgb = strtok(NULL, ",");
+        if (rgb) light_entity->rgb.blue = atoi(rgb);
+    }
+
+}
+/**
+ * @brief homeAssistant_get_command
+ *      获取 服务器指令事件，并把相应实体指针指向对应的实体
+ * @param topic
+ * @param topic_len
+ * @param data
+ * @param data_len
+ * @return ha_event_t
+*/
+static ha_event_t homeAssistant_get_command(const char* topic, uint16_t topic_len, const char* data, uint16_t data_len)
+{
+    if (topic==NULL ||data==NULL) {
+        LOG_E("params is NULL");
+        return HA_EVENT_NONE;
+    }
+    ha_event_t event;
+
+    //查找出switch 实体
+    ha_sw_entity_t* switch_cur = ha_device->entity_switch->switch_list->next;
+
+    while (switch_cur!=ha_device->entity_switch->switch_list) {
+        if (!strncmp(topic, switch_cur->command_topic, topic_len)) {
+            if (switch_cur->payload_on!=NULL)
+                switch_cur->switch_state = strncmp(data, switch_cur->payload_on, data_len)?false:true;
+            else
+                switch_cur->switch_state = strncmp(data, "ON", data_len)?false:true;
+            event = HA_EVENT_MQTT_COMMAND_SWITCH;
+            //找出该实体之后，方便后面操作实体
+            ha_device->entity_switch->command_switch = switch_cur;
+            return event;
+        }
+        //指针指向下一个节点
+        if (switch_cur->next==ha_device->entity_switch->switch_list) break;
+        else
+            switch_cur = switch_cur->next;
+    }
+    //查找相应的Light 实体
+    ha_lh_entity_t* light_cur = ha_device->entity_light->light_list->next;
+
+
+    while (light_cur!=ha_device->entity_light->light_list)
+    {
+        if (!strncmp(topic, light_cur->command_topic, topic_len)) {
+            if (light_cur->payload_on!=NULL)light_cur->light_state = strncmp(data, light_cur->payload_on, data_len)?false:true;
+            else light_cur->light_state = strncmp(data, "ON", data_len)?false:true;
+            event = HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH;
+
+            ha_device->entity_light->command_light = light_cur;
+            return event;
+        }
+        else if (!strncmp(topic, light_cur->rgb.rgb_command_topic, topic_len)) {
+            homeAssistant_get_light_rgb(light_cur, data);
+            event = HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE;
+
+            ha_device->entity_light->command_light = light_cur;
+            return event;
+        }
+
+        if (light_cur->next==ha_device->entity_light->light_list)break;
+        else
+            light_cur = light_cur->next;
+    }
+    return event;
+}
+
+static aiio_err_t mqtt_event_cb(aiio_mqtt_event_handle_t event)
+{
+    int32_t event_id;
+    aiio_mqtt_client_handle_t client = event->client;
+    event_id = event->event_id;
+    LOG_D("Event dispatched, event_id=%d", event_id);
+    int msg_id;
+    switch ((aiio_mqtt_event_id_t)event_id) {
+        case MQTT_EVENT_CONNECTED:
+
+            ha_device->mqtt_info.mqtt_connect_status = true;
+            ha_device->event_cb(HA_EVENT_MQTT_CONNECED, ha_device);
+            LOG_D("HomeAssistant free heap size=%dbyte", aiio_os_get_free_heap_size());
+            break;
+        case MQTT_EVENT_DISCONNECTED:
+            ha_device->mqtt_info.mqtt_connect_status = false;
+            ha_device->event_cb(HA_EVENT_MQTT_DISCONNECT, ha_device);
+            break;
+        case MQTT_EVENT_SUBSCRIBED:
+            LOG_D("MQTT_EVENT_SUBSCRIBED");
+            LOG_D("HomeAssistant free heap size=%dbyte", aiio_os_get_free_heap_size());
+            break;
+        case MQTT_EVENT_UNSUBSCRIBED:
+            LOG_D("MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+            break;
+        case MQTT_EVENT_PUBLISHED:
+            LOG_D("MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+            break;
+        case MQTT_EVENT_DATA:
+            LOG_D("MQTT_EVENT_DATA");
+            LOG_D("TOPIC=%.*s", event->topic_len, event->topic);
+            LOG_D("DATA=%.*s", event->data_len, event->data);
+            ha_device->event_cb(homeAssistant_get_command(event->topic, event->topic_len, event->data, event->data_len), ha_device);
+            LOG_D("HomeAssistant free heap size=%dbyte", aiio_os_get_free_heap_size());
+            break;
+        case MQTT_EVENT_ERROR:
+            // LOG_D("MQTT_EVENT_ERROR");
+            if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+                log_error_if_nonzero("reported from esp-tls", event->error_handle->aiio_tls_last_aiio_err);
+                log_error_if_nonzero("reported from tls stack", event->error_handle->aiio_tls_stack_err);
+                log_error_if_nonzero("captured as transport's socket errno", event->error_handle->aiio_transport_sock_errno);
+                LOG_D("Last errno string (%s)", strerror(event->error_handle->aiio_transport_sock_errno));
+            }
+            ha_device->event_cb(HA_EVENT_MQTT_ERROR, ha_device);
+            break;
+        default:
+            LOG_D("Other event id:%d", event->event_id);
+            break;
+    }
+    return AIIO_OK;
+}
+
+static void homeAssistant_mqtt_init(aiio_mqtt_client_handle_t* client)
+{
+    if (client==NULL) {
+        LOG_E("client is NULL");
+        return;
+    }
+    aiio_mqtt_client_config_t mqtt_cfg = {
+        .host = ha_device->mqtt_info.mqtt_host,
+        .port = ha_device->mqtt_info.port,
+        .username = ha_device->mqtt_info.mqtt_username,
+        .password = ha_device->mqtt_info.mqtt_password,
+        .keepalive = ha_device->mqtt_info.mqtt_keeplive,
+        .client_id = ha_device->mqtt_info.mqtt_clientID,
+        .lwt_qos = ha_device->mqtt_info.will.will_qos,
+        .lwt_retain = ha_device->mqtt_info.will.will_retain,
+        .lwt_msg = ha_device->mqtt_info.will.will_msg,
+        .lwt_msg_len = ha_device->mqtt_info.will.will_msg_len,
+        .event_handle = mqtt_event_cb,
+    };
+    memset(client, 0, sizeof(aiio_mqtt_client_handle_t));
+    *client = aiio_mqtt_client_init(&mqtt_cfg);
+    if (*client!= NULL) LOG_D("MQTT client init suceess!");
+    else LOG_E("MQTT client init fail");
+}
+
+void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(ha_event_t, homeAssisatnt_device_t*))
+{
+    if (ha_dev==NULL) {
+        LOG_E("param is NULL");
+        return;
+    }
+    static uint8_t* buff = NULL;
+
+    ha_device = ha_dev;
+    aiio_wifi_sta_mac_get(STA_MAC);
+    if (ha_device->mqtt_info.mqtt_clientID==NULL)ha_device->mqtt_info.mqtt_clientID = CONFIG_HA_MQTT_CLIENT_DEF_ID;
+    if (ha_device->mqtt_info.mqtt_host==NULL)ha_device->mqtt_info.mqtt_host = CONFIG_HA_MQTT_SERVER_HOST;
+    if (ha_device->mqtt_info.port==0)ha_device->mqtt_info.port = CONFIG_HA_MQTT_SERVER_PORT;
+    if (ha_device->mqtt_info.mqtt_username==NULL)ha_device->mqtt_info.mqtt_username = CONFIG_HA_MQTT_CLIENT_DEF_USERNAME;
+    if (ha_device->mqtt_info.mqtt_password==NULL)ha_device->mqtt_info.mqtt_password = CONFIG_HA_MQTT_CLIENT_DEF_PASSWORLD;
+    if (ha_device->mqtt_info.mqtt_keeplive==0)ha_device->mqtt_info.mqtt_keeplive = CONFIG_HA_MQTT_CLIENT_DEF_KEEPALIVE;
+    if (ha_device->mqtt_info.will.will_msg==NULL) ha_device->mqtt_info.will.will_msg = "offline";
+    if (ha_device->mqtt_info.will.will_msg==NULL)ha_device->mqtt_info.will.will_msg_len = strlen("offline");
+    if (ha_device->mqtt_info.will.will_topic==NULL) {
+        buff = pvPortMalloc(128);
+        memset(buff, 0, 128);
+        sprintf(buff, "%s/%02x%02x%02x%02x%02x%02x/status", CONFIG_HA_AUTOMATIC_DISCOVERY, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5]);
+        ha_device->mqtt_info.will.will_topic = buff;
+        ha_device->mqtt_info.will.will_qos = 0;
+        ha_device->mqtt_info.will.will_retain = true;
+    }
+    ha_device->mqtt_info.mqtt_connect_status = false;
+
+    LOG_I(".....................MQTT client connect info......................");
+    LOG_I("clientID:%s", ha_dev->mqtt_info.mqtt_clientID);
+    LOG_I("host:%s", ha_dev->mqtt_info.mqtt_host);
+    LOG_I("port:%d", ha_dev->mqtt_info.port);
+    LOG_I("username:%s", ha_dev->mqtt_info.mqtt_username);
+    LOG_I("password:%s", ha_dev->mqtt_info.mqtt_password);
+    LOG_I("...................................................................");
+    homeAssistant_mqtt_init(&ha_device->mqtt_client);
+
+    if (ha_device->name==NULL)ha_device->name = CONFIG_HA_DEVICE_NAME;
+    if (ha_device->hw_version==NULL)ha_device->hw_version = CONFIG_HA_DEVICE_HW_VERSION;
+    if (ha_device->identifiers==NULL)ha_device->identifiers = ha_device->hw_version;
+    if (ha_device->sw_version==NULL)ha_device->sw_version = CONFIG_HA_DEVICE_SW_VERSION;
+    if (ha_device->payload_available==NULL)ha_device->payload_available = "online";
+    if (ha_device->payload_not_available==NULL)ha_device->payload_not_available = "offline";
+    if (ha_device->manufacturer==NULL)ha_device->manufacturer = CONFIG_HA_DEVICE_MANUFACTURER;
+    if (ha_device->model==NULL)ha_device->model = "Ai-M61";
+    if (ha_device->availability_topic==NULL) {
+        ha_device->availability_topic = pvPortMalloc(128);
+        memset(ha_device->availability_topic, 0, 128);
+        sprintf(ha_device->availability_topic, "%s/%02x%02x%02x%02x%02x%02x/status", CONFIG_HA_AUTOMATIC_DISCOVERY, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5]);
+    }
+
+    //初始化Light 实体
+    ha_device->entity_light = pvPortMalloc(sizeof(ha_lhlist_t));
+    ha_device->entity_light->entity_type = CONFIG_HA_ENTITY_LIGHT;
+    ha_device->entity_light->light_list = pvPortMalloc(sizeof(ha_lh_entity_t));
+    ha_device->entity_light->light_list->prev = ha_device->entity_light->light_list;
+    ha_device->entity_light->light_list->next = ha_device->entity_light->light_list;
+    //初始化开关实体双向连接表
+    ha_device->entity_switch = pvPortMalloc(sizeof(ha_swlist_t));
+    ha_device->entity_switch->entity_type = CONFIG_HA_ENTITY_SWITCH;
+    ha_device->entity_switch->switch_list = pvPortMalloc(sizeof(ha_sw_entity_t));
+    ha_device->entity_switch->switch_list->prev = ha_device->entity_switch->switch_list;
+    ha_device->entity_switch->switch_list->next = ha_device->entity_switch->switch_list;
+
+    ha_device->event_cb = event_cb;
+    vPortFree(buff);
+}
+
+void homeAssistant_device_start(void)
+{
+    if (ha_device==NULL) {
+        LOG_E("param is NULL");
+        return;
+    }
+    aiio_mqtt_client_start(ha_device->mqtt_client);
+}
+
+void homeAssisatnt_device_stop(void)
+{
+    if (ha_device==NULL) {
+        LOG_E("param is NULL");
+        return;
+    }
+    homeAssistant_device_send_status(false);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    aiio_mqtt_client_disconnect(ha_device->mqtt_client);
+    aiio_mqtt_client_stop(ha_device->mqtt_client);
+}
+
+void homeAssistant_device_send_status(bool status)
+{
+    if (ha_device->mqtt_info.mqtt_connect_status) {
+        if (ha_device->availability_topic==NULL) goto   __c_topic;
+        else goto   send_status;
+    __c_topic:
+        ha_device->availability_topic = pvPortMalloc(128);
+        memset(ha_device->availability_topic, 0, 128);
+        sprintf(ha_device->availability_topic, "%s/%02x%02x%02x%02x%02x%02x/status", CONFIG_HA_AUTOMATIC_DISCOVERY, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5]);
+    send_status:
+        if (ha_device->payload_available==NULL)ha_device->payload_available = "online";
+        if (ha_device->payload_not_available==NULL)ha_device->payload_not_available = "offline";
+        aiio_mqtt_client_publish(ha_device->mqtt_client, ha_device->availability_topic, status?ha_device->payload_available:ha_device->payload_not_available, status?strlen(ha_device->payload_available):strlen(ha_device->payload_not_available), 0, 1);
+    }
+    else {
+        LOG_E("MQTT server is disconnect");
+    }
+}
+
+void homeAssistant_device_add_entity(uint8_t* entity_type, void* ha_entity_list)
+{
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_SWITCH)) {
+        //添加 switch 节点
+        ha_sw_entity_t* switch_node = (ha_sw_entity_t*)ha_entity_list;
+        entity_swith_add_node(switch_node);
+    }
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_LIGHT)) {
+        LOG_I("HomeAssistant add light entity");
+        ha_lh_entity_t* light_node = (ha_lh_entity_t*)ha_entity_list;
+        entity_light_add_node(light_node);
+    }
+}
+
+int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_list, uint16_t state)
+{
+    int ret_id = -1;
+    if (entity_type==NULL||ha_entity_list==NULL) {
+        LOG_E("params error");
+        return ret_id;
+    }
+
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_SWITCH)) {
+        ha_sw_entity_t* switch_node = (ha_sw_entity_t*)ha_entity_list;
+        ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, switch_node->state_topic, state?switch_node->payload_on:switch_node->payload_off, state?strlen(switch_node->payload_on):strlen(switch_node->payload_off), 0, 0);
+    }
+
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_LIGHT)) {
+        ha_lh_entity_t* light_node = (ha_lh_entity_t*)ha_entity_list;
+        //上报RGB值
+        if (light_node->rgb.rgb_command_topic!=NULL) {
+            char* rgb_data = pvPortMalloc(16);
+            if (light_node->rgb.rgb_value_template==NULL) {
+                memset(rgb_data, 0, 16);
+                sprintf(rgb_data, "%d,%d,%d", light_node->rgb.rad, light_node->rgb.green, light_node->rgb.blue);
+                ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, light_node->rgb.rgb_state_topic, rgb_data, strlen(rgb_data), 0, 0);
+                if (ret_id<false) LOG_E("publish is fali");
+            }
+            vPortFree(rgb_data);
+        }
+        if (light_node->payload_on!=NULL && light_node->payload_off!=NULL)
+            ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, light_node->state_topic, state?light_node->payload_on:light_node->payload_off, state?strlen(light_node->payload_on):strlen(light_node->payload_off), 0, 0);
+        else {
+            ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, light_node->state_topic, state?"ON":"OFF", state?2:3, 0, 0);
+        }
+    }
+    return ret_id;
+}
+

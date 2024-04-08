@@ -138,7 +138,7 @@ static void entity_swith_add_node(ha_sw_entity_t* switch_new_node)
     switch_new_node->prev = switch_list_handle;
     switch_new_node->next = ha_device->entity_switch->switch_list;
     ha_device->entity_switch->switch_list->prev = switch_new_node;
- 
+
     vPortFree(switch_new_node->switch_config_data);
 }
 
@@ -203,8 +203,6 @@ static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON*
     cJSON_Delete(root);
 }
 
-
-
 static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
 {
     // assert(ha_device->entity_light->light_list);
@@ -231,7 +229,6 @@ static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
     light_new_node->prev = light_list_handle;
     light_new_node->next = ha_device->entity_light->light_list;
     ha_device->entity_light->light_list->prev = light_new_node;
-       LOG_W("light_new_node addr: %p  next %p",light_new_node,light_new_node->next);
     vPortFree(light_new_node->light_config_data);
 }
 
@@ -248,22 +245,26 @@ static void log_error_if_nonzero(const char* message, int error_code)
  * @param light_entity
  * @param rgb_data
 */
-static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char* rgb_data)
+static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char* rgb_data, uint16_t data_len)
 {
     if (light_entity==NULL || rgb_data==NULL) {
         LOG_E("entity light buff is NULL");
         return;
     }
-
+    char* data_str = pvPortMalloc(data_len);
+    memset(data_str, 0, data_len);
+    sprintf(data_str, "%.*s", data_len, rgb_data);
+    LOG_F("rgb_data %s", data_str);
     if (light_entity->rgb.rgb_command_template==NULL) {
-        char* rgb = strtok(rgb_data, ",");
-        if (rgb)light_entity->rgb.rad = atoi(rgb);
+        char* rgb = strtok(data_str, ",");
+        if (rgb)light_entity->rgb.red = atoi(rgb);
         rgb = strtok(NULL, ",");
         if (rgb) light_entity->rgb.green = atoi(rgb);
         rgb = strtok(NULL, ",");
         if (rgb) light_entity->rgb.blue = atoi(rgb);
-    }
 
+    }
+    vPortFree(data_str);
 }
 /**
  * @brief homeAssistant_get_command
@@ -303,21 +304,19 @@ static ha_event_t homeAssistant_get_command(const char* topic, uint16_t topic_le
     }
     //查找相应的Light 实体
     ha_lh_entity_t* light_cur = ha_device->entity_light->light_list->next;
-
-
     while (light_cur!=ha_device->entity_light->light_list)
     {
-        if (!strncmp(topic, light_cur->command_topic, topic_len)) {
-            if (light_cur->payload_on!=NULL)light_cur->light_state = strncmp(data, light_cur->payload_on, data_len)?false:true;
-            else light_cur->light_state = strncmp(data, "ON", data_len)?false:true;
-            event = HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH;
-
+        if (!strncmp(topic, light_cur->rgb.rgb_command_topic, topic_len)) {
+            homeAssistant_get_light_rgb(light_cur, data, data_len);
+            event = HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE;
+            light_cur->light_state = true;
             ha_device->entity_light->command_light = light_cur;
             return event;
         }
-        else if (!strncmp(topic, light_cur->rgb.rgb_command_topic, topic_len)) {
-            homeAssistant_get_light_rgb(light_cur, data);
-            event = HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE;
+        else  if (!strncmp(topic, light_cur->command_topic, topic_len)) {
+            if (light_cur->payload_on!=NULL)light_cur->light_state = strncmp(data, light_cur->payload_on, data_len)?false:true;
+            else light_cur->light_state = strncmp(data, "ON", data_len)?false:true;
+            event = HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH;
 
             ha_device->entity_light->command_light = light_cur;
             return event;
@@ -549,7 +548,7 @@ int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_
             char* rgb_data = pvPortMalloc(16);
             if (light_node->rgb.rgb_value_template==NULL) {
                 memset(rgb_data, 0, 16);
-                sprintf(rgb_data, "%d,%d,%d", light_node->rgb.rad, light_node->rgb.green, light_node->rgb.blue);
+                sprintf(rgb_data, "%d,%d,%d", light_node->rgb.red, light_node->rgb.green, light_node->rgb.blue);
                 ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, light_node->rgb.rgb_state_topic, rgb_data, strlen(rgb_data), 0, 0);
                 if (ret_id<false) LOG_E("publish is fali");
             }

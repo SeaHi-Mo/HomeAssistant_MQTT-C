@@ -18,6 +18,10 @@
 #define HOMEASSISTANT_STATUS_OFFLINE 0
 
 #define HOMEASSISTANT_CONFIG_DATA_SIZE 1024
+/**
+ * @brief 传感器
+ *
+*/
 
 typedef enum {
     HA_EVENT_NONE = 0,
@@ -29,6 +33,61 @@ typedef enum {
     HA_EVENT_MQTT_COMMAND_LIGHT_BRIGHTNESS,
     HA_EVENT_MQTT_ERROR,
 }ha_event_t;
+
+typedef enum {
+    Class_None = 0,
+    Class_apparent_power,
+    Class_aqi,
+    Class_atmospheric_pressure,
+    Class_battery,
+    Class_carbon_dioxide,
+    Class_carbon_monoxide,
+    Class_current,
+    Class_data_rate,
+    Class_data_size,
+    Class_date,
+    Class_distance,
+    Class_duration,
+    Class_energy,
+    Class_energy_storage,
+    Class_ha_enum,
+    Class_frequency,
+    Class_gas,
+    Class_humidity,
+    Class_illuminance,
+    Class_irradiance,
+    Class_moisture,
+    Class_monetary,
+    Class_nitrogen_dioxide,
+    Class_nitrogen_monoxide,
+    Class_nitrous_oxide,
+    Class_ozone,
+    Class_ph,
+    Class_pm1,
+    Class_pm25,
+    Class_pm10,
+    Class_power_factor,
+    Class_power,
+    Class_precipitation,
+    Class_precipitation_intensity,
+    Class_pressure,
+    Class_reactive_power,
+    Class_signal_strength,
+    Class_sound_pressure,
+    Class_speed,
+    Class_sulphur_dioxide,
+    Class_temperature,
+    Class_timestamp,
+    Class_volatile_organic_compounds,
+    Class_volatile_organic_compounds_parts,
+    Class_voltage,
+    Class_volume,
+    Class_volume_flow_rate,
+    Class_volume_storage,
+    Class_water,
+    Class_weight,
+    Class_wind_speed
+}ha_sensor_class_t;
 /**
  * @brief 连接信息
  *
@@ -218,7 +277,6 @@ typedef  struct homeAssisatnt_entity_light {
     uint8_t* unique_id;
     uint8_t* value_template;
     bool light_state;
-
     struct homeAssisatnt_entity_light* prev;
     struct homeAssisatnt_entity_light* next;
 }ha_lh_entity_t;
@@ -228,6 +286,45 @@ typedef struct {
     ha_lh_entity_t* light_list;
     ha_lh_entity_t* command_light;
 }ha_lhlist_t;
+/**
+ * @brief 传感器实体
+ *
+*/
+typedef  struct homeAssisatnt_entity_sensor {
+    uint8_t* name;
+    uint8_t* entity_config_topic;
+    uint8_t* config_data;
+    uint8_t* object_id;
+    uint8_t* unique_id;
+    uint8_t* availability_mode;
+    uint8_t* availability_template;
+    uint8_t* availability_topic;
+    ha_sensor_class_t device_class;
+    uint8_t* payload_available;
+    uint8_t* payload_not_available;
+    uint16_t suggested_display_precision;
+    bool enabled_by_default;
+    uint8_t* entity_category;
+    uint8_t* icon;
+    uint8_t* json_attributes_template;
+    uint8_t* json_attributes_topic;
+    uint8_t* last_reset_value_template;
+    uint8_t qos;
+    uint8_t* state_class;
+    uint8_t* state_topic;
+    uint8_t* unit_of_measurement;
+    uint8_t* value_template;
+    uint16_t expire_after;
+    bool force_update;
+    void* sensor_data;
+    struct homeAssisatnt_entity_sensor* prev;
+    struct homeAssisatnt_entity_sensor* next;
+}ha_sensor_entity_t;
+
+typedef struct {
+    uint8_t* entity_type;
+    ha_sensor_entity_t* sensor_list;
+}ha_sensorlist_t;
 
 /**
  * @brief  设备信息
@@ -248,6 +345,7 @@ typedef struct homeAssisatnt_device {
     homeAssisatnt_netinfo_t wifi_info;
     ha_swlist_t* entity_switch;
     ha_lhlist_t* entity_light;
+    ha_sensorlist_t* entity_sensor;
     aiio_mqtt_client_handle_t mqtt_client;
     ha_mqtt_info_t mqtt_info;
     void (*event_cb)(ha_event_t event, struct homeAssisatnt_device* ha_dev);
@@ -293,5 +391,13 @@ void homeAssistant_device_send_status(bool status);
  * @return int 成功返回消息ID，失败返回-1
 */
 int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_list, uint16_t state);
+/**
+ * @brief homeAssisatant_fine_entity
+ *          查找实体
+ * @param entity_type 实体类型
+ * @param unique_id 实体的 unique id
+ * @return void* 返回的实体指针
+*/
+void* homeAssisatant_fine_entity(uint8_t* entity_type, const char* unique_id);
 #endif
 

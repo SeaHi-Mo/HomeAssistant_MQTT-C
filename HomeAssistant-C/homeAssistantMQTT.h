@@ -18,32 +18,30 @@
 #define HOMEASSISTANT_STATUS_OFFLINE 0
 
 #define HOMEASSISTANT_CONFIG_DATA_SIZE 1024
-/**
- * @brief 传感器
- *
-*/
 
+//HomeAssistant 的MQTT 事件 只要部分事件，更多事件还在更新当中
 typedef enum {
     HA_EVENT_NONE = 0,
-    HA_EVENT_MQTT_CONNECED,
-    HA_EVENT_MQTT_DISCONNECT,
-    HA_EVENT_MQTT_COMMAND_SWITCH,
-    HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH,
-    HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE,
-    HA_EVENT_MQTT_COMMAND_LIGHT_BRIGHTNESS,
+    HA_EVENT_MQTT_CONNECED, //服务器连接成功事件
+    HA_EVENT_MQTT_DISCONNECT,//服务器断开事件
+    HA_EVENT_MQTT_COMMAND_SWITCH,//服务器下发开关命令事件，当在HA操作开关时，会触发这个事件
+    HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH,//light 灯的开关事件
+    HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE,//light 灯的RGB 颜色下发事件
+    HA_EVENT_MQTT_COMMAND_LIGHT_BRIGHTNESS,//light 灯的亮度数据下发事件
+
     HA_EVENT_MQTT_ERROR,
 }ha_event_t;
 
 
 /**
- * @brief 连接信息
+ * @brief 连接信息 ，这个没啥用，用不到
  *
 */
 typedef struct homeAssisatnt_netinfo {
-    uint8_t* ssid;
-    uint8_t* password;
-    uint8_t* bssid;
-    uint8_t* ipv4_addr;
+    uint8_t* ssid; //路由器名称，不支持中文和5GHz
+    uint8_t* password;//路由器密码
+    uint8_t* bssid;//路由器bssid
+    uint8_t* ipv4_addr;//获取到的IP地址
 }homeAssisatnt_netinfo_t;
 /**
  * @brief 设备遗嘱，用于掉线之后发送下线信息
@@ -51,58 +49,58 @@ typedef struct homeAssisatnt_netinfo {
 */
 typedef struct homeAssisatnt_device_will
 {
-    uint8_t* will_topic;
-    uint8_t* will_msg;
-    uint8_t will_msg_len;
-    uint8_t will_qos;
-    bool will_retain;
+    uint8_t* will_topic; //遗嘱需要发送的Topic
+    uint8_t* will_msg;  //需要发送的消息，一般: offline
+    uint8_t will_msg_len;//消息的长度
+    uint8_t will_qos;//服务质量
+    bool will_retain;//是否保留
 }homeAssisatnt_device_will_t;
 /**
  * @brief MQTT 连接信息
  *
 */
 typedef struct homeAssisatnt_mqtt_info {
-    bool mqtt_connect_status;
-    uint8_t* mqtt_host;
-    uint16_t port;
-    uint8_t* mqtt_clientID;
-    uint8_t* mqtt_username;
-    uint8_t* mqtt_password;
-    int mqtt_keeplive;
-    homeAssisatnt_device_will_t will;
+    bool mqtt_connect_status; //MQTT 服务器连接状态，true 为已连接。false 为未连接
+    uint8_t* mqtt_host;      //MQTT 服务器地址，支持域名解析
+    uint16_t port;           // MQTT 服务器端口
+    uint8_t* mqtt_clientID;  //MQTT 的客户端ID
+    uint8_t* mqtt_username;  //MQTT 接入的用户名
+    uint8_t* mqtt_password;  //MQTT 接入密码
+    int mqtt_keeplive;      //保活时间
+    homeAssisatnt_device_will_t will;//遗嘱内容
 }ha_mqtt_info_t;
 /**
  * @brief switch实体信息
  * @brief 成员含义可以参考：https://www.home-assistant.io/integrations/switch.mqtt/
 */
 typedef struct homeAssisatnt_entity_switch {
-    uint8_t* name;
-    uint8_t* entity_config_topic;
-    uint8_t* object_id;
-    uint8_t* availability_mode;
-    uint8_t* availability_template;
-    uint8_t* availability_topic;
-    uint8_t* command_topic;
-    uint8_t* state_topic;
-    uint8_t* device_class;
-    bool enabled_by_default;
-    uint8_t* encoding;
-    uint8_t* entity_category;
-    uint8_t* icon;
-    uint8_t* json_attributes_template;
-    uint8_t* optimistic;
-    uint8_t* payload_available;
-    uint8_t* payload_not_available;
-    uint8_t* payload_off;
-    uint8_t* payload_on;
-    uint8_t qos;
-    bool retain;
-    uint8_t* state_off;
-    uint8_t* state_on;
-    uint8_t* unique_id;
-    uint8_t* value_template;
-    uint8_t* switch_config_data;
-    bool switch_state;
+    uint8_t* name;                   //实体名称 必须要赋值
+    uint8_t* entity_config_topic;    //实体自动发现需要的topic，已经自动赋值，可以不配置
+    uint8_t* object_id;              //实体 工程id 可以为NULL
+    uint8_t* availability_mode;      //实体上下线的模式 可以为NULL
+    uint8_t* availability_template;  //实体上下线的数据格式，建议为NULL，采用默认
+    uint8_t* availability_topic;     //实体上下线上报的Topic,建议保持默认
+    uint8_t* command_topic;          //命令接收的Topic,需要订阅
+    uint8_t* state_topic;            //上报给HA的数据的Topic
+    uint8_t* device_class;           //设备类型，可以留空
+    bool enabled_by_default;         //默认LED的状态
+    uint8_t* encoding;               //编码方式
+    uint8_t* entity_category;        //实体属性，保持NULL
+    uint8_t* icon;                    //图标
+    uint8_t* json_attributes_template;//json 数据模板
+    uint8_t* optimistic;              //记忆模式
+    uint8_t* payload_available;       //在线消息内容 默认"online"
+    uint8_t* payload_not_available;   //离线消息内容 默认"offline"
+    uint8_t* payload_off;             //开关状态内容，默认"ON"
+    uint8_t* payload_on;               //开关状态内容，默认"OFF"
+    uint8_t qos;                      //消息服务质量
+    bool retain;                       //是否保留该信息     
+    uint8_t* state_off;               //状态 关          
+    uint8_t* state_on;                  //状态 开
+    uint8_t* unique_id;                // 唯一的识别码，这个必须配置 
+    uint8_t* value_template;           //数据格式 
+    uint8_t* switch_config_data;      //开关的自动发现的json数据
+    bool switch_state;                 //当前开关状态 
     struct homeAssisatnt_entity_switch* prev;
     struct homeAssisatnt_entity_switch* next;
 }ha_sw_entity_t;
@@ -431,7 +429,6 @@ typedef struct homeAssisatnt_device {
  *
  * @param ha_dev 设备句柄
 */
-// void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev);
 void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(ha_event_t, homeAssisatnt_device_t*));
 /**
  * @brief HomeAssistant 启动连接

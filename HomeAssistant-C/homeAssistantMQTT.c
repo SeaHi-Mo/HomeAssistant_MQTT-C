@@ -763,8 +763,14 @@ int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_
             sensor_node->sensor_data = pvPortMalloc(16);
             memset(sensor_node->sensor_data, 0, 16);
             sprintf(sensor_node->sensor_data, "%d", state);
+            ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, sensor_node->state_topic, sensor_node->sensor_data, strlen(sensor_node->sensor_data), 0, 0);
+            memset(sensor_node->sensor_data, 0, 16);
+            vPortFree(sensor_node->sensor_data);
+            sensor_node->sensor_data=NULL;
         }
-        ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, sensor_node->state_topic, sensor_node->sensor_data, strlen(sensor_node->sensor_data), 0, 0);
+        else
+            ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, sensor_node->state_topic, sensor_node->sensor_data, strlen(sensor_node->sensor_data), 0, 0);
+
     }
 
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_BINARY_SENSOR)) {
@@ -814,6 +820,16 @@ void* homeAssisatant_fine_entity(uint8_t* entity_type, const char* unique_id)
         }
         LOG_E("There is no %s entity unique id %s", entity_type, unique_id);
     }
-
+    //查找 binary sensor 实体
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_BINARY_SENSOR)) {
+        ha_Bsensor_entity_t* binary_sensor_cur = ha_device->entity_binary_sensor->binary_sensor_list->next;
+        while (binary_sensor_cur !=ha_device->entity_binary_sensor->binary_sensor_list) {
+            if (!strcmp(binary_sensor_cur->unique_id, unique_id)) {
+                return binary_sensor_cur;
+            }
+            binary_sensor_cur = binary_sensor_cur->next;
+        }
+        LOG_E("There is no %s entity unique id %s", entity_type, unique_id);
+    }
     return NULL;
 }

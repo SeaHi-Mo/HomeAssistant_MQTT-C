@@ -237,12 +237,7 @@ static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
     ha_device->entity_light->light_list->prev = light_new_node;
     vPortFree(light_new_node->light_config_data);
 }
-/**
- * @brief 创建
- *
- * @param sensor_entity
- * @param device_json
-*/
+
 static char* sensor_class_type[] = { "None","apparent_power","aqi","atmospheric_pressure","battery",\
 "carbon_dioxide","carbon_monoxide","current","data_rate","data_size","date","distance","duration",\
 "energy","energy_storage","enum","frequency","gas","humidity","illuminance","irradiance","moisture",\
@@ -318,6 +313,86 @@ static void  entity_sensor_add_node(ha_sensor_entity_t* sensor_new_node)
     sensor_new_node->next = ha_device->entity_sensor->sensor_list;
     ha_device->entity_sensor->sensor_list->prev = sensor_new_node;
     vPortFree(sensor_new_node->config_data);
+}
+/**
+ * @brief 二进制传感器
+ *
+*/
+static char* Bsensor_class_type[] = { "None","battery","battery_charging","carbon_monoxide","cold","connectivity","door","garage_door",\
+    "gas","heat","light","lock","moisture","motion","moving","occupancy","opening","plug","power", "presence", "problem", "running","safety", "smoke", "sound", "tamper", "update", "vibration", "window" };
+
+static void homeAssistant_create_binary_sensor_data(ha_Bsensor_entity_t* binary_sensor_entity, cJSON* device_json)
+{
+    if (binary_sensor_entity==NULL) {
+        LOG_E("entity light buff is NULL");
+        return;
+    }
+
+    cJSON* root = cJSON_CreateObject();
+    if (binary_sensor_entity->name!=NULL)cJSON_AddStringToObject(root, "name", binary_sensor_entity->name);
+    if (binary_sensor_entity->unique_id!=NULL)cJSON_AddStringToObject(root, "unique_id", binary_sensor_entity->unique_id);
+    if (binary_sensor_entity->object_id!=NULL)cJSON_AddStringToObject(root, "object_id", binary_sensor_entity->object_id);
+    if (binary_sensor_entity->icon!=NULL)cJSON_AddStringToObject(root, "icon", binary_sensor_entity->icon);
+    if (binary_sensor_entity->availability_template!=NULL)cJSON_AddStringToObject(root, "availability_template", binary_sensor_entity->availability_template);
+    if (binary_sensor_entity->availability_topic!=NULL)cJSON_AddStringToObject(root, "availability_topic", binary_sensor_entity->availability_topic);
+    else cJSON_AddStringToObject(root, "availability_topic", ha_device->availability_topic);
+    if (binary_sensor_entity->payload_available!=NULL)cJSON_AddStringToObject(root, "payload_available", binary_sensor_entity->payload_available);
+    else  cJSON_AddStringToObject(root, "payload_available", ha_device->payload_available);
+    if (binary_sensor_entity->payload_not_available!=NULL)cJSON_AddStringToObject(root, "payload_not_available", binary_sensor_entity->payload_not_available);
+    else cJSON_AddStringToObject(root, "payload_not_available", ha_device->payload_not_available);
+    if (binary_sensor_entity->device_class) cJSON_AddStringToObject(root, "device_class", Bsensor_class_type[binary_sensor_entity->device_class]);
+    if (binary_sensor_entity->json_attributes_template!=NULL) cJSON_AddStringToObject(root, "json_attributes_template", binary_sensor_entity->json_attributes_template);
+    if (binary_sensor_entity->json_attributes_topic!=NULL)cJSON_AddStringToObject(root, "json_attributes_topic", binary_sensor_entity->json_attributes_topic);
+    if (binary_sensor_entity->state_class!=NULL)cJSON_AddStringToObject(root, "state_class", binary_sensor_entity->state_class);
+
+    if (binary_sensor_entity->entity_category!=NULL)cJSON_AddStringToObject(root, "entity_category", binary_sensor_entity->entity_category);
+    if (binary_sensor_entity->state_topic==NULL) {
+        binary_sensor_entity->state_topic = pvPortMalloc(128);
+        memset(binary_sensor_entity->state_topic, 0, 128);
+        sprintf(binary_sensor_entity->state_topic, "%02x%02x%02x%02x%02x%02x/%s/state", STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], binary_sensor_entity->unique_id);
+    }
+    cJSON_AddStringToObject(root, "state_topic", binary_sensor_entity->state_topic);
+    if (binary_sensor_entity->payload_on==NULL) binary_sensor_entity->payload_on = "ON";
+    cJSON_AddStringToObject(root, "payload_on", binary_sensor_entity->payload_on);
+    if (binary_sensor_entity->payload_off==NULL) binary_sensor_entity->payload_off = "OFF";
+    cJSON_AddStringToObject(root, "payload_off", binary_sensor_entity->payload_off);
+
+    if (binary_sensor_entity->value_template!=NULL)cJSON_AddStringToObject(root, "value_template", binary_sensor_entity->value_template);
+    if (binary_sensor_entity->expire_after)cJSON_AddNumberToObject(root, "expire_after", binary_sensor_entity->expire_after);
+    if (binary_sensor_entity->force_update)cJSON_AddTrueToObject(root, "force_update");
+    else cJSON_AddFalseToObject(root, "force_update");
+    //添加设备信息
+    if (device_json!=NULL)cJSON_AddItemToObject(root, "device", device_json);
+    binary_sensor_entity->config_data = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+}
+
+static void  entity_binary_sensor_add_node(ha_Bsensor_entity_t* binary_sensor_new_node)
+{
+    if (binary_sensor_new_node==NULL) return;
+    ha_Bsensor_entity_t* binary_sensor_list_handle = ha_device->entity_binary_sensor->binary_sensor_list->prev;
+
+    homeAssistant_create_binary_sensor_data(binary_sensor_new_node, homeAssistant_device_create());
+    if (binary_sensor_new_node->entity_config_topic==NULL) {
+        binary_sensor_new_node->entity_config_topic = pvPortMalloc(128);
+        memset(binary_sensor_new_node->entity_config_topic, 0, 128);
+        sprintf(binary_sensor_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_BINARY_SENSOR, binary_sensor_new_node->unique_id);
+
+    }
+    if (ha_device->mqtt_info.mqtt_connect_status) {
+        aiio_mqtt_client_publish(ha_device->mqtt_client, binary_sensor_new_node->entity_config_topic, binary_sensor_new_node->config_data, strlen(binary_sensor_new_node->config_data), 1, 0);
+        LOG_D("Topic:%s", binary_sensor_new_node->entity_config_topic);
+        LOG_D("config data:%s", binary_sensor_new_node->config_data);
+    }
+    else {
+        LOG_E("MQTT server is diconnenct");
+    }
+
+    binary_sensor_list_handle->next = binary_sensor_new_node;
+    binary_sensor_new_node->prev = binary_sensor_list_handle;
+    binary_sensor_new_node->next = ha_device->entity_binary_sensor->binary_sensor_list;
+    ha_device->entity_binary_sensor->binary_sensor_list->prev = binary_sensor_new_node;
+    vPortFree(binary_sensor_new_node->config_data);
 }
 
 static void log_error_if_nonzero(const char* message, int error_code)
@@ -550,6 +625,12 @@ void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(h
         sprintf(ha_device->availability_topic, "%s/%02x%02x%02x%02x%02x%02x/status", CONFIG_HA_AUTOMATIC_DISCOVERY, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5]);
         // ha_device->availability_topic = ha_device->mqtt_info.will.will_topic;
     }
+    //初始化 binary sensor 实体
+    ha_device->entity_binary_sensor = pvPortMalloc(sizeof(ha_Bsensor_entity_t));
+    ha_device->entity_binary_sensor->entity_type = CONFIG_HA_ENTITY_BINARY_SENSOR;
+    ha_device->entity_binary_sensor->binary_sensor_list = pvPortMalloc(sizeof(ha_Bsensor_entity_t));
+    ha_device->entity_binary_sensor->binary_sensor_list->prev = ha_device->entity_binary_sensor->binary_sensor_list;
+    ha_device->entity_binary_sensor->binary_sensor_list->next = ha_device->entity_binary_sensor->binary_sensor_list;
     //初始化Sensor 实体
     ha_device->entity_sensor = pvPortMalloc(sizeof(ha_sensor_entity_t));
     ha_device->entity_sensor->entity_type = CONFIG_HA_ENTITY_SENSOR;
@@ -615,22 +696,31 @@ void homeAssistant_device_send_status(bool status)
 
 void homeAssistant_device_add_entity(uint8_t* entity_type, void* ha_entity_list)
 {
+    //添加开关实体
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_SWITCH)) {
         //添加 switch 节点
         ha_sw_entity_t* switch_node = (ha_sw_entity_t*)ha_entity_list;
         entity_swith_add_node(switch_node);
     }
+    //添加light 实体
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_LIGHT)) {
         LOG_I("HomeAssistant add light entity");
         ha_lh_entity_t* light_node = (ha_lh_entity_t*)ha_entity_list;
         entity_light_add_node(light_node);
     }
-
+    //添加传感器
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_SENSOR)) {
         LOG_I("HomeAssistant add sensor entity");
         ha_sensor_entity_t* sensor_node = (ha_sensor_entity_t*)ha_entity_list;
         entity_sensor_add_node(sensor_node);
     }
+    //添加二进制传感器实体
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_BINARY_SENSOR)) {
+        LOG_I("HomeAssistant add binary sensor entity");
+        ha_Bsensor_entity_t* binary_sensor_node = (ha_Bsensor_entity_t*)ha_entity_list;
+        entity_binary_sensor_add_node(binary_sensor_node);
+    }
+
 }
 
 int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_list, uint16_t state)
@@ -676,6 +766,12 @@ int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_
         }
         ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, sensor_node->state_topic, sensor_node->sensor_data, strlen(sensor_node->sensor_data), 0, 0);
     }
+
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_BINARY_SENSOR)) {
+        ha_Bsensor_entity_t* binary_sensor_node = (ha_sensor_entity_t*)ha_entity_list;
+        ret_id = aiio_mqtt_client_publish(ha_device->mqtt_client, binary_sensor_node->state_topic, state?binary_sensor_node->payload_on:binary_sensor_node->payload_off, state?strlen(binary_sensor_node->payload_on):strlen(binary_sensor_node->payload_off), 0, 0);
+    }
+
     return ret_id;
 }
 
@@ -718,5 +814,6 @@ void* homeAssisatant_fine_entity(uint8_t* entity_type, const char* unique_id)
         }
         LOG_E("There is no %s entity unique id %s", entity_type, unique_id);
     }
+
     return NULL;
 }

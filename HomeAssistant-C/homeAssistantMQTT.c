@@ -485,6 +485,7 @@ static void homeAssistant_mqtt_init(aiio_mqtt_client_handle_t* client)
         .lwt_retain = ha_device->mqtt_info.will.will_retain,
         .lwt_msg = ha_device->mqtt_info.will.will_msg,
         .lwt_msg_len = ha_device->mqtt_info.will.will_msg_len,
+        .lwt_topic = ha_device->mqtt_info.will.will_topic,
         .event_handle = mqtt_event_cb,
     };
     memset(client, 0, sizeof(aiio_mqtt_client_handle_t));
@@ -509,8 +510,11 @@ void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(h
     if (ha_device->mqtt_info.mqtt_username==NULL)ha_device->mqtt_info.mqtt_username = CONFIG_HA_MQTT_CLIENT_DEF_USERNAME;
     if (ha_device->mqtt_info.mqtt_password==NULL)ha_device->mqtt_info.mqtt_password = CONFIG_HA_MQTT_CLIENT_DEF_PASSWORLD;
     if (ha_device->mqtt_info.mqtt_keeplive==0)ha_device->mqtt_info.mqtt_keeplive = CONFIG_HA_MQTT_CLIENT_DEF_KEEPALIVE;
-    if (ha_device->mqtt_info.will.will_msg==NULL) ha_device->mqtt_info.will.will_msg = "offline";
-    if (ha_device->mqtt_info.will.will_msg==NULL)ha_device->mqtt_info.will.will_msg_len = strlen("offline");
+
+    if (ha_device->mqtt_info.will.will_msg==NULL) {
+        ha_device->mqtt_info.will.will_msg = "offline";
+        ha_device->mqtt_info.will.will_msg_len = strlen("offline");
+    }
     if (ha_device->mqtt_info.will.will_topic==NULL) {
         buff = pvPortMalloc(128);
         memset(buff, 0, 128);
@@ -527,6 +531,8 @@ void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(h
     LOG_I("port:%d", ha_dev->mqtt_info.port);
     LOG_I("username:%s", ha_dev->mqtt_info.mqtt_username);
     LOG_I("password:%s", ha_dev->mqtt_info.mqtt_password);
+    LOG_I("will topic:%s", ha_device->mqtt_info.will.will_topic);
+    LOG_I("will msg:%s", ha_device->mqtt_info.will.will_msg);
     LOG_I("...................................................................");
     homeAssistant_mqtt_init(&ha_device->mqtt_client);
 

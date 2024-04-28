@@ -30,6 +30,9 @@
 
 /********** HomeAssistant 配置 *************/
 #define CONFIG_HA_AUTOMATIC_DISCOVERY   "homeassistant"                    //自动发现的前缀
+#define CONFIG_HA_STATUS_TOPIC "homeassistant/Ai/status"                      //HomeAssistant 上线topic
+#define CONFIG_HA_STATUS_MESSAGE_ON "online"                               //homeAssistant 上线时发送的内容
+#define CONFIG_HA_STATUS_MESSAGE_OFF "offline"                             //homeAssistant 掉线时发送的内容
 
 #define CONFIG_HA_ENTITY_ALARM_CONTROL_PANEL "alarm_control_panel"         //报警控制面板 实体
 #define CONFIG_HA_ENTITY_BINARY_SENSOR       "binary_sensor"               //高低电平传感器 实体

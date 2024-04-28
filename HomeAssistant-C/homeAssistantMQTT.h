@@ -28,10 +28,10 @@ typedef enum {
     HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH,//light 灯的开关事件
     HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE,//light 灯的RGB 颜色下发事件
     HA_EVENT_MQTT_COMMAND_LIGHT_BRIGHTNESS,//light 灯的亮度数据下发事件
-
+    HA_EVENT_HOMEASSISTANT_STATUS_ONLINE,
+    HA_EVENT_HOMEASSISTANT_STATUS_OFFLINE,
     HA_EVENT_MQTT_ERROR,
 }ha_event_t;
-
 
 /**
  * @brief 连接信息 ，这个没啥用，用不到
@@ -99,7 +99,7 @@ typedef struct homeAssisatnt_entity_switch {
     uint8_t* state_on;                  //状态 开
     uint8_t* unique_id;                // 唯一的识别码，这个必须配置 
     uint8_t* value_template;           //数据格式 
-    uint8_t* switch_config_data;      //开关的自动发现的json数据
+    uint8_t* config_data;      //开关的自动发现的json数据
     bool switch_state;                 //当前开关状态 
     struct homeAssisatnt_entity_switch* prev;
     struct homeAssisatnt_entity_switch* next;
@@ -206,7 +206,7 @@ typedef  struct homeAssisatnt_entity_light {
     uint8_t* payload_off;
     uint8_t* payload_on;
     uint8_t qos;
-    uint8_t* light_config_data;
+    uint8_t* config_data;
     struct light_brightness_t brightness;
     struct light_color_temp_t color_temp;
     struct light_effect_t effect;
@@ -318,6 +318,7 @@ typedef  struct homeAssisatnt_entity_sensor {
     uint16_t expire_after;
     bool force_update;
     void* sensor_data;
+
     struct homeAssisatnt_entity_sensor* prev;
     struct homeAssisatnt_entity_sensor* next;
 }ha_sensor_entity_t;
@@ -421,6 +422,7 @@ typedef struct homeAssisatnt_device {
     ha_binary_sensorlist_t* entity_binary_sensor;
     aiio_mqtt_client_handle_t mqtt_client;
     ha_mqtt_info_t mqtt_info;
+    bool homeassistant_online;
     void (*event_cb)(ha_event_t event, struct homeAssisatnt_device* ha_dev);
 }homeAssisatnt_device_t;
 

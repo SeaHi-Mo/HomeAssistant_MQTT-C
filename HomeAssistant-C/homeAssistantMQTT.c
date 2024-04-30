@@ -22,7 +22,7 @@
 static aiio_mqtt_client_config_t ha_mqtt_cfg;
 static homeAssisatnt_device_t* ha_device;
 
-static uint8_t STA_MAC[6] = { 0 };
+static char STA_MAC[6] = { 0 };
 
 static cJSON* homeAssistant_device_create(void)
 {
@@ -411,7 +411,7 @@ static void log_error_if_nonzero(const char* message, int error_code)
  * @param light_entity
  * @param rgb_data
 */
-static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char* rgb_data, uint16_t data_len)
+static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char* rgb_data, unsigned short data_len)
 {
     if (light_entity==NULL || rgb_data==NULL) {
         LOG_E("entity light buff is NULL");
@@ -441,7 +441,7 @@ static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char
  * @param data_len
  * @return ha_event_t
 */
-static ha_event_t homeAssistant_get_command(const char* topic, uint16_t topic_len, const char* data, uint16_t data_len)
+static ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len, const char* data, unsigned short data_len)
 {
     if (topic==NULL ||data==NULL) {
         LOG_E("params is NULL");
@@ -691,7 +691,7 @@ void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(h
         LOG_E("param is NULL");
         return;
     }
-    static uint8_t* buff = NULL;
+    static char* buff = NULL;
 
     ha_device = ha_dev;
     aiio_wifi_sta_mac_get(STA_MAC);
@@ -810,7 +810,7 @@ void homeAssistant_device_send_status(bool status)
     }
 }
 
-void homeAssistant_device_add_entity(uint8_t* entity_type, void* ha_entity_list)
+void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
 {
     //添加开关实体
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_SWITCH)) {
@@ -839,7 +839,7 @@ void homeAssistant_device_add_entity(uint8_t* entity_type, void* ha_entity_list)
 
 }
 
-int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_list, uint16_t state)
+int homeAssistan_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state)
 {
     int ret_id = -1;
     if (entity_type==NULL||ha_entity_list==NULL) {
@@ -897,7 +897,7 @@ int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_
     return ret_id;
 }
 
-void* homeAssisatant_fine_entity(uint8_t* entity_type, const char* unique_id)
+void* homeAssisatant_fine_entity(char* entity_type, const char* unique_id)
 {
     if (entity_type==NULL | unique_id==NULL) {
         LOG_E("parama is NULL");

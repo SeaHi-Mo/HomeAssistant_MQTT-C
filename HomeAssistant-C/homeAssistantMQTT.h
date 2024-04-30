@@ -38,10 +38,10 @@ typedef enum {
  *
 */
 typedef struct homeAssisatnt_netinfo {
-    uint8_t* ssid; //路由器名称，不支持中文和5GHz
-    uint8_t* password;//路由器密码
-    uint8_t* bssid;//路由器bssid
-    uint8_t* ipv4_addr;//获取到的IP地址
+    char* ssid; //路由器名称，不支持中文和5GHz
+    char* password;//路由器密码
+    char* bssid;//路由器bssid
+    char* ipv4_addr;//获取到的IP地址
 }homeAssisatnt_netinfo_t;
 /**
  * @brief 设备遗嘱，用于掉线之后发送下线信息
@@ -49,10 +49,10 @@ typedef struct homeAssisatnt_netinfo {
 */
 typedef struct homeAssisatnt_device_will
 {
-    uint8_t* will_topic; //遗嘱需要发送的Topic
-    uint8_t* will_msg;  //需要发送的消息，一般: offline
-    uint8_t will_msg_len;//消息的长度
-    uint8_t will_qos;//服务质量
+    char* will_topic; //遗嘱需要发送的Topic
+    char* will_msg;  //需要发送的消息，一般: offline
+    char will_msg_len;//消息的长度
+    char will_qos;//服务质量
     bool will_retain;//是否保留
 }homeAssisatnt_device_will_t;
 /**
@@ -61,11 +61,11 @@ typedef struct homeAssisatnt_device_will
 */
 typedef struct homeAssisatnt_mqtt_info {
     bool mqtt_connect_status; //MQTT 服务器连接状态，true 为已连接。false 为未连接
-    uint8_t* mqtt_host;      //MQTT 服务器地址，支持域名解析
-    uint16_t port;           // MQTT 服务器端口
-    uint8_t* mqtt_clientID;  //MQTT 的客户端ID
-    uint8_t* mqtt_username;  //MQTT 接入的用户名
-    uint8_t* mqtt_password;  //MQTT 接入密码
+    char* mqtt_host;      //MQTT 服务器地址，支持域名解析
+    unsigned short port;           // MQTT 服务器端口
+    char* mqtt_clientID;  //MQTT 的客户端ID
+    char* mqtt_username;  //MQTT 接入的用户名
+    char* mqtt_password;  //MQTT 接入密码
     int mqtt_keeplive;      //保活时间
     homeAssisatnt_device_will_t will;//遗嘱内容
 }ha_mqtt_info_t;
@@ -74,39 +74,39 @@ typedef struct homeAssisatnt_mqtt_info {
  * @brief 成员含义可以参考：https://www.home-assistant.io/integrations/switch.mqtt/
 */
 typedef struct homeAssisatnt_entity_switch {
-    uint8_t* name;                   //实体名称 必须要赋值
-    uint8_t* entity_config_topic;    //实体自动发现需要的topic，已经自动赋值，可以不配置
-    uint8_t* object_id;              //实体 工程id 可以为NULL
-    uint8_t* availability_mode;      //实体上下线的模式 可以为NULL
-    uint8_t* availability_template;  //实体上下线的数据格式，建议为NULL，采用默认
-    uint8_t* availability_topic;     //实体上下线上报的Topic,建议保持默认
-    uint8_t* command_topic;          //命令接收的Topic,需要订阅
-    uint8_t* state_topic;            //上报给HA的数据的Topic
-    uint8_t* device_class;           //设备类型，可以留空
+    char* name;                   //实体名称 必须要赋值
+    char* entity_config_topic;    //实体自动发现需要的topic，已经自动赋值，可以不配置
+    char* object_id;              //实体 工程id 可以为NULL
+    char* availability_mode;      //实体上下线的模式 可以为NULL
+    char* availability_template;  //实体上下线的数据格式，建议为NULL，采用默认
+    char* availability_topic;     //实体上下线上报的Topic,建议保持默认
+    char* command_topic;          //命令接收的Topic,需要订阅
+    char* state_topic;            //上报给HA的数据的Topic
+    char* device_class;           //设备类型，可以留空
     bool enabled_by_default;         //默认LED的状态
-    uint8_t* encoding;               //编码方式
-    uint8_t* entity_category;        //实体属性，保持NULL
-    uint8_t* icon;                    //图标
-    uint8_t* json_attributes_template;//json 数据模板
-    uint8_t* optimistic;              //记忆模式
-    uint8_t* payload_available;       //在线消息内容 默认"online"
-    uint8_t* payload_not_available;   //离线消息内容 默认"offline"
-    uint8_t* payload_off;             //开关状态内容，默认"ON"
-    uint8_t* payload_on;               //开关状态内容，默认"OFF"
-    uint8_t qos;                      //消息服务质量
+    char* encoding;               //编码方式
+    char* entity_category;        //实体属性，保持NULL
+    char* icon;                    //图标
+    char* json_attributes_template;//json 数据模板
+    char* optimistic;              //记忆模式
+    char* payload_available;       //在线消息内容 默认"online"
+    char* payload_not_available;   //离线消息内容 默认"offline"
+    char* payload_off;             //开关状态内容，默认"ON"
+    char* payload_on;               //开关状态内容，默认"OFF"
+    char qos;                      //消息服务质量
     bool retain;                       //是否保留该信息     
-    uint8_t* state_off;               //状态 关          
-    uint8_t* state_on;                  //状态 开
-    uint8_t* unique_id;                // 唯一的识别码，这个必须配置 
-    uint8_t* value_template;           //数据格式 
-    uint8_t* config_data;      //开关的自动发现的json数据
+    char* state_off;               //状态 关          
+    char* state_on;                  //状态 开
+    char* unique_id;                // 唯一的识别码，这个必须配置 
+    char* value_template;           //数据格式 
+    char* config_data;      //开关的自动发现的json数据
     bool switch_state;                 //当前开关状态 
     struct homeAssisatnt_entity_switch* prev;
     struct homeAssisatnt_entity_switch* next;
 }ha_sw_entity_t;
 
 typedef struct {
-    uint8_t* entity_type;
+    char* entity_type;
     ha_sw_entity_t* switch_list;
     ha_sw_entity_t* command_switch;
 }ha_swlist_t;
@@ -116,97 +116,97 @@ typedef struct {
  * @brief 成员含义可以参考：https://www.home-assistant.io/integrations/switch.mqtt/
 */
 struct light_brightness_t {
-    uint8_t* brightness_command_topic;
-    uint8_t* brightness_command_template;
-    uint8_t* brightness_scale;
-    uint8_t* brightness_state_topic;
-    uint8_t* brightness_value_template;
-    uint8_t brightness;
+    char* brightness_command_topic;
+    char* brightness_command_template;
+    char* brightness_scale;
+    char* brightness_state_topic;
+    char* brightness_value_template;
+    char brightness;
 };
 
 struct light_color_temp_t {
-    uint8_t* color_mode_state_topic;
-    uint8_t* color_mode_value_template;
-    uint8_t* color_temp_command_template;
-    uint8_t* color_temp_command_topic;
-    uint8_t* color_temp_state_topic;
-    uint8_t* color_temp_value_template;
+    char* color_mode_state_topic;
+    char* color_mode_value_template;
+    char* color_temp_command_template;
+    char* color_temp_command_topic;
+    char* color_temp_state_topic;
+    char* color_temp_value_template;
 };
 
 struct light_effect_t {
-    uint8_t* effect_command_topic;
-    uint8_t* effect_command_template;
-    uint8_t* effect_list;
-    uint8_t* effect_state_topic;
-    uint8_t* effect_value_template;
+    char* effect_command_topic;
+    char* effect_command_template;
+    char* effect_list;
+    char* effect_state_topic;
+    char* effect_value_template;
 };
 
 struct light_hs_t {
-    uint8_t* hs_command_template;
-    uint8_t* hs_command_topic;
-    uint8_t* hs_state_topic;
-    uint8_t* hs_value_template;
+    char* hs_command_template;
+    char* hs_command_topic;
+    char* hs_state_topic;
+    char* hs_value_template;
 };
 
 struct light_rgb_t {
-    uint8_t* rgb_command_template;
-    uint8_t* rgb_command_topic;
-    uint8_t* rgb_state_topic;
-    uint8_t* rgb_value_template;
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
+    char* rgb_command_template;
+    char* rgb_command_topic;
+    char* rgb_state_topic;
+    char* rgb_value_template;
+    char red;
+    char green;
+    char blue;
 };
 
 struct light_rgbw_t {
-    uint8_t* rgbw_command_template;
-    uint8_t* rgbw_command_topic;
-    uint8_t* rgbw_state_topic;
-    uint8_t* rgbw_value_template;
+    char* rgbw_command_template;
+    char* rgbw_command_topic;
+    char* rgbw_state_topic;
+    char* rgbw_value_template;
 };
 
 struct light_rgbww_t {
-    uint8_t* rgbww_command_template;
-    uint8_t* rgbww_command_topic;
-    uint8_t* rgbww_state_topic;
-    uint8_t* rgbww_value_template;
+    char* rgbww_command_template;
+    char* rgbww_command_topic;
+    char* rgbww_state_topic;
+    char* rgbww_value_template;
 };
 
 struct light_white_t {
-    uint8_t* white_command_topic;
-    uint8_t* white_scale;
+    char* white_command_topic;
+    char* white_scale;
 };
 
 struct light_xy_t {
 
-    uint8_t* xy_command_template;
-    uint8_t* xy_command_topic;
-    uint8_t* xy_state_topic;
-    uint8_t* xy_value_template;
+    char* xy_command_template;
+    char* xy_command_topic;
+    char* xy_state_topic;
+    char* xy_value_template;
 };
 
 typedef  struct homeAssisatnt_entity_light {
-    uint8_t* name;
-    uint8_t* entity_config_topic;
-    uint8_t* object_id;
-    uint8_t* availability_mode;
-    uint8_t* availability_template;
-    uint8_t* availability_topic;
-    uint8_t* command_topic;
-    uint8_t* state_topic;
-    uint8_t* device_class;
+    char* name;
+    char* entity_config_topic;
+    char* object_id;
+    char* availability_mode;
+    char* availability_template;
+    char* availability_topic;
+    char* command_topic;
+    char* state_topic;
+    char* device_class;
     bool enabled_by_default;
-    uint8_t* encoding;
-    uint8_t* entity_category;
-    uint8_t* icon;
-    uint8_t* json_attributes_template;
-    uint8_t* optimistic;
-    uint8_t* payload_available;
-    uint8_t* payload_not_available;
-    uint8_t* payload_off;
-    uint8_t* payload_on;
-    uint8_t qos;
-    uint8_t* config_data;
+    char* encoding;
+    char* entity_category;
+    char* icon;
+    char* json_attributes_template;
+    char* optimistic;
+    char* payload_available;
+    char* payload_not_available;
+    char* payload_off;
+    char* payload_on;
+    char qos;
+    char* config_data;
     struct light_brightness_t brightness;
     struct light_color_temp_t color_temp;
     struct light_effect_t effect;
@@ -217,17 +217,17 @@ typedef  struct homeAssisatnt_entity_light {
     struct light_white_t white;
     struct light_xy_t xy;
     bool retain;
-    uint8_t* state_off;
-    uint8_t* state_on;
-    uint8_t* unique_id;
-    uint8_t* value_template;
+    char* state_off;
+    char* state_on;
+    char* unique_id;
+    char* value_template;
     bool light_state;
     struct homeAssisatnt_entity_light* prev;
     struct homeAssisatnt_entity_light* next;
 }ha_lh_entity_t;
 
 typedef struct {
-    uint8_t* entity_type;
+    char* entity_type;
     ha_lh_entity_t* light_list;
     ha_lh_entity_t* command_light;
 }ha_lhlist_t;
@@ -292,30 +292,30 @@ typedef enum {
 }ha_sensor_class_t;
 
 typedef  struct homeAssisatnt_entity_sensor {
-    uint8_t* name;
-    uint8_t* entity_config_topic;
-    uint8_t* config_data;
-    uint8_t* object_id;
-    uint8_t* unique_id;
-    uint8_t* availability_mode;
-    uint8_t* availability_template;
-    uint8_t* availability_topic;
+    char* name;
+    char* entity_config_topic;
+    char* config_data;
+    char* object_id;
+    char* unique_id;
+    char* availability_mode;
+    char* availability_template;
+    char* availability_topic;
     ha_sensor_class_t device_class;
-    uint8_t* payload_available;
-    uint8_t* payload_not_available;
-    uint16_t suggested_display_precision;
+    char* payload_available;
+    char* payload_not_available;
+    unsigned short suggested_display_precision;
     bool enabled_by_default;
-    uint8_t* entity_category;
-    uint8_t* icon;
-    uint8_t* json_attributes_template;
-    uint8_t* json_attributes_topic;
-    uint8_t* last_reset_value_template;
-    uint8_t qos;
-    uint8_t* state_class;
-    uint8_t* state_topic;
-    uint8_t* unit_of_measurement;
-    uint8_t* value_template;
-    uint16_t expire_after;
+    char* entity_category;
+    char* icon;
+    char* json_attributes_template;
+    char* json_attributes_topic;
+    char* last_reset_value_template;
+    char qos;
+    char* state_class;
+    char* state_topic;
+    char* unit_of_measurement;
+    char* value_template;
+    unsigned short expire_after;
     bool force_update;
     void* sensor_data;
 
@@ -324,7 +324,7 @@ typedef  struct homeAssisatnt_entity_sensor {
 }ha_sensor_entity_t;
 
 typedef struct {
-    uint8_t* entity_type;
+    char* entity_type;
     ha_sensor_entity_t* sensor_list;
 }ha_sensorlist_t;
 
@@ -366,37 +366,37 @@ typedef enum {
 }ha_Bsensor_class_t;
 
 typedef  struct homeAssisatnt_entity_binary_sensor {
-    uint8_t* name;
-    uint8_t* entity_config_topic;
-    uint8_t* config_data;
-    uint8_t* object_id;
-    uint8_t* unique_id;
-    uint8_t* availability_mode;
-    uint8_t* availability_template;
-    uint8_t* availability_topic;
-    uint8_t* payload_available;
-    uint8_t* payload_not_available;
+    char* name;
+    char* entity_config_topic;
+    char* config_data;
+    char* object_id;
+    char* unique_id;
+    char* availability_mode;
+    char* availability_template;
+    char* availability_topic;
+    char* payload_available;
+    char* payload_not_available;
     ha_Bsensor_class_t device_class;
-    uint8_t* entity_category;
-    uint8_t* icon;
-    uint8_t* json_attributes_template;
-    uint8_t* json_attributes_topic;
-    uint8_t qos;
-    uint8_t* state_class;
-    uint8_t* state_topic;
-    uint8_t* value_template;
-    uint16_t expire_after;
+    char* entity_category;
+    char* icon;
+    char* json_attributes_template;
+    char* json_attributes_topic;
+    char qos;
+    char* state_class;
+    char* state_topic;
+    char* value_template;
+    unsigned short expire_after;
     bool force_update;
     bool enabled_by_default;
     bool state;
-    uint8_t* payload_off;
-    uint8_t* payload_on;
+    char* payload_off;
+    char* payload_on;
     struct homeAssisatnt_entity_binary_sensor* prev;
     struct homeAssisatnt_entity_binary_sensor* next;
 }ha_Bsensor_entity_t;
 
 typedef struct {
-    uint8_t* entity_type;
+    char* entity_type;
     ha_Bsensor_entity_t* binary_sensor_list;
 }ha_binary_sensorlist_t;
 /**
@@ -404,17 +404,17 @@ typedef struct {
  *
 */
 typedef struct homeAssisatnt_device {
-    uint8_t* name;
-    uint8_t* hw_version;
-    uint8_t* sw_version;
-    uint8_t* identifiers;
-    uint8_t* manufacturer;
-    uint8_t* model;
-    uint8_t* via_device;
-    uint8_t* suggest_area;
-    uint8_t* availability_topic;
-    uint8_t* payload_available;
-    uint8_t* payload_not_available;
+    char* name;
+    char* hw_version;
+    char* sw_version;
+    char* identifiers;
+    char* manufacturer;
+    char* model;
+    char* via_device;
+    char* suggest_area;
+    char* availability_topic;
+    char* payload_available;
+    char* payload_not_available;
     homeAssisatnt_netinfo_t wifi_info;
     ha_swlist_t* entity_switch;
     ha_lhlist_t* entity_light;
@@ -448,7 +448,7 @@ void homeAssisatnt_device_stop(void);
  * @param entity_type 实体名称
  * @param ha_entity_list 实体描述
 */
-void homeAssistant_device_add_entity(uint8_t* entity_type, void* ha_entity_list);
+void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list);
 /**
  * @brief 发送设备状态
  *
@@ -464,7 +464,7 @@ void homeAssistant_device_send_status(bool status);
  * @param state 状态
  * @return int 成功返回消息ID，失败返回-1
 */
-int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_list, uint16_t state);
+int homeAssistan_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state);
 /**
  * @brief homeAssisatant_fine_entity
  *          查找实体
@@ -472,6 +472,6 @@ int homeAssistan_device_send_entity_state(uint8_t* entity_type, void* ha_entity_
  * @param unique_id 实体的 unique id
  * @return void* 返回的实体指针
 */
-void* homeAssisatant_fine_entity(uint8_t* entity_type, const char* unique_id);
+void* homeAssisatant_fine_entity(char* entity_type, const char* unique_id);
 #endif
 

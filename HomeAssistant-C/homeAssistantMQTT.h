@@ -12,8 +12,7 @@
 #define HOMEASSISTANTMQTT_H
 
 #include "homeAssistantDevConfig.h"
-#include "aiio_mqtt_client.h"
-
+#include "stdbool.h"
 #define HOMEASSISTANT_STATUS_ONLINE 1
 #define HOMEASSISTANT_STATUS_OFFLINE 0
 

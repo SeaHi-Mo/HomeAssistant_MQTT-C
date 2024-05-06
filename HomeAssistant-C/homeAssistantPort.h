@@ -24,7 +24,7 @@
 #define HA_LOG_W(...) printf("\033[0;33m[W][" DBG_TAG "] " __VA_ARGS__ )
 #define HA_LOG_F(...) printf("\033[0;35m[F][" DBG_TAG "] " __VA_ARGS__ )
 #endif
-
+void homeAssistant_get_sta_mac(char* mac);
 int homeAssistant_mqtt_port_init(homeAssisatnt_device_t* ha_dev);
 int homeAssistant_mqtt_port_start(void);
 int homeAssistant_mqtt_port_stop(void);

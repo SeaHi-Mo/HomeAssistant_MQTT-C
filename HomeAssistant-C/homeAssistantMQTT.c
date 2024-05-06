@@ -13,12 +13,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "FreeRTOS.h"
-#include "aiio_wifi.h"
+#include <task.h>
+#include <assert.h>
+// #include "aiio_wifi.h"
 #include "homeAssistantPort.h"
 #include "cJSON.h"
 #define DBG_TAG "homeAssistantMQTT"
 
-static aiio_mqtt_client_config_t ha_mqtt_cfg;
 static homeAssisatnt_device_t* ha_device;
 
 static uint8_t STA_MAC[6] = { 0 };
@@ -28,7 +29,7 @@ static cJSON* homeAssistant_device_create(void)
     if (ha_device==NULL)
     {
         HA_LOG_E("device is NULL\r\n");
-        return;
+        return NULL;
     }
     cJSON* root = cJSON_CreateObject();
     if (ha_device->name!=NULL) cJSON_AddStringToObject(root, "name", ha_device->name);
@@ -441,7 +442,7 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
         HA_LOG_E("params is NULL\r\n");
         return HA_EVENT_NONE;
     }
-    ha_event_t event;
+    ha_event_t event = HA_EVENT_NONE;
     //识别homeassistant 平台的出生消息
     if (!strncmp(topic, CONFIG_HA_STATUS_TOPIC, topic_len)) {
         if (!strncmp(data, CONFIG_HA_STATUS_MESSAGE_ON, data_len)) {
@@ -586,68 +587,6 @@ void update_all_entity_to_homeassistant(void)
 
 }
 
-// static aiio_err_t mqtt_event_cb(aiio_mqtt_event_handle_t event)
-// {
-//     int32_t event_id;
-//     aiio_mqtt_client_handle_t client = event->client;
-//     event_id = event->event_id;
-//     HA_LOG_D("Event dispatched, event_id=%d\r\n", event_id);
-//     int msg_id;
-//     switch ((aiio_mqtt_event_id_t)event_id) {
-//         case MQTT_EVENT_CONNECTED:
-//             ha_device->mqtt_info.mqtt_connect_status = true;
-//             ha_device->homeassistant_online = true;
-//             ha_device->event_cb(HA_EVENT_MQTT_CONNECED, ha_device);
-//             homeAssistant_mqtt_port_subscribe(CONFIG_HA_STATUS_TOPIC, 0);
-//             break;
-//         case MQTT_EVENT_DISCONNECTED:
-//             ha_device->mqtt_info.mqtt_connect_status = false;
-//             ha_device->event_cb(HA_EVENT_MQTT_DISCONNECT, ha_device);
-//             break;
-//         case MQTT_EVENT_SUBSCRIBED:
-//             HA_LOG_D("MQTT_EVENT_SUBSCRIBED\r\n");
-
-//             break;
-//         case MQTT_EVENT_UNSUBSCRIBED:
-//             HA_LOG_D("MQTT_EVENT_UNSUBSCRIBED, msg_id=%d\r\n", event->msg_id);
-//             break;
-//         case MQTT_EVENT_PUBLISHED:
-//             HA_LOG_D("MQTT_EVENT_PUBLISHED, msg_id=%d\r\n", event->msg_id);
-//             break;
-//         case MQTT_EVENT_DATA:
-//             HA_LOG_D("MQTT_EVENT_DATA\r\n");
-//             HA_LOG_D("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-//             HA_LOG_D("DATA=%.*s\r\n", event->data_len, event->data);
-//             ha_event_t ha_event = homeAssistant_get_command(event->topic, event->topic_len, event->data, event->data_len);
-//             if (ha_event==HA_EVENT_HOMEASSISTANT_STATUS_ONLINE) {
-//                 HA_LOG_I("HomeAssistant is online,send device status\r\n");
-//                 update_all_entity_to_homeassistant();
-//                 homeAssistant_device_send_status(HOMEASSISTANT_STATUS_ONLINE);
-//             }
-
-//             if (ha_device->homeassistant_online)
-//                 ha_device->event_cb(ha_event, ha_device);
-//             else
-//                 HA_LOG_E("HomeAssistant is offline\r\n");
-//             break;
-//         case MQTT_EVENT_ERROR:
-//             // HA_LOG_D("MQTT_EVENT_ERROR");
-//             if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
-//                 HA_LOG_Error_if_nonzero("reported from esp-tls", event->error_handle->aiio_tls_last_aiio_err);
-//                 HA_LOG_Error_if_nonzero("reported from tls stack", event->error_handle->aiio_tls_stack_err);
-//                 HA_LOG_Error_if_nonzero("captured as transport's socket errno", event->error_handle->aiio_transport_sock_errno);
-//                 HA_LOG_D("Last errno string (%s)\r\n", strerror(event->error_handle->aiio_transport_sock_errno));
-//             }
-//             ha_device->event_cb(HA_EVENT_MQTT_ERROR, ha_device);
-//             break;
-//         default:
-//             HA_LOG_D("Other event id:%d\r\n", event->event_id);
-//             break;
-//     }
-//     event->event_id = MQTT_EVENT_ANY;
-//     return AIIO_OK;
-// }
-
 static void homeAssistant_mqtt_init(homeAssisatnt_device_t* ha_dev)
 {
     if (ha_dev==NULL) {
@@ -666,7 +605,7 @@ void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(h
     static char* buff = NULL;
 
     ha_device = ha_dev;
-    aiio_wifi_sta_mac_get(STA_MAC);
+    homeAssistant_get_sta_mac((char*)STA_MAC);
     if (ha_device->mqtt_info.mqtt_clientID==NULL)ha_device->mqtt_info.mqtt_clientID = CONFIG_HA_MQTT_CLIENT_DEF_ID;
     if (ha_device->mqtt_info.mqtt_host==NULL)ha_device->mqtt_info.mqtt_host = CONFIG_HA_MQTT_SERVER_HOST;
     if (ha_device->mqtt_info.port==0)ha_device->mqtt_info.port = CONFIG_HA_MQTT_SERVER_PORT;
@@ -870,7 +809,7 @@ int homeAssistan_device_send_entity_state(char* entity_type, void* ha_entity_lis
 
 void* homeAssisatant_fine_entity(char* entity_type, const char* unique_id)
 {
-    if (entity_type==NULL | unique_id==NULL) {
+    if (entity_type==NULL || unique_id==NULL) {
         HA_LOG_E("parama is NULL\r\n");
         return NULL;
     }

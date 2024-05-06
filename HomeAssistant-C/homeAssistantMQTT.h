@@ -19,6 +19,7 @@
 
 #define HOMEASSISTANT_CONFIG_DATA_SIZE 1024
 
+
 //HomeAssistant 的MQTT 事件 只要部分事件，更多事件还在更新当中
 typedef enum {
     HA_EVENT_NONE = 0,
@@ -420,7 +421,6 @@ typedef struct homeAssisatnt_device {
     ha_lhlist_t* entity_light;
     ha_sensorlist_t* entity_sensor;
     ha_binary_sensorlist_t* entity_binary_sensor;
-    aiio_mqtt_client_handle_t mqtt_client;
     ha_mqtt_info_t mqtt_info;
     bool homeassistant_online;
     void (*event_cb)(ha_event_t event, struct homeAssisatnt_device* ha_dev);
@@ -473,5 +473,7 @@ int homeAssistan_device_send_entity_state(char* entity_type, void* ha_entity_lis
  * @return void* 返回的实体指针
 */
 void* homeAssisatant_fine_entity(char* entity_type, const char* unique_id);
+
+
 #endif
 

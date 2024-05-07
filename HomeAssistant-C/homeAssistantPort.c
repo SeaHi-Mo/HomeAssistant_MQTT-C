@@ -13,7 +13,8 @@
 #include <stdlib.h>
 #include "homeAssistantPort.h"
 
-#define CONFIG_Ai_M6x
+// #define CONFIG_Ai_M6x
+#define CONFIG_Ai_WB2
 homeAssisatnt_device_t* ha_device;
 extern  void update_all_entity_to_homeassistant(void);
 extern  ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len, const char* data, unsigned short data_len);
@@ -114,7 +115,7 @@ static axk_err_t event_cb(axk_mqtt_event_handle_t event)
     axk_mqtt_client_handle_t client = event->client;
 
     event_id = event->event_id;
-    HA_LOG_D("Event dispatched, event_id=%d\r\n", event_id);
+    HA_LOG_D("Event dispatched, event_id=%d\r\n", (int)event_id);
     int msg_id;
     switch ((axk_mqtt_event_id_t)event_id) {
         case MQTT_EVENT_CONNECTED:
@@ -249,7 +250,7 @@ int homeAssistant_mqtt_port_init(homeAssisatnt_device_t* ha_dev)
     else {
         HA_LOG_E("MQTT client init fail\r\n");
         return -1;
-}
+    }
 #endif
     //其他程序
     return 0;
@@ -277,7 +278,7 @@ int homeAssistant_mqtt_port_start(void)
     else {
         HA_LOG_E("[%s:%d]param is null\r\n", __func__, __LINE__);
         return -1;
-}
+    }
 #endif
 
     return 0;
@@ -348,7 +349,7 @@ int homeAssistant_mqtt_port_public(const char* topic, const char* payload, int q
     else {
         HA_LOG_E("[%s:%d]param is null\r\n", __func__, __LINE__);
         return -1;
-}
+    }
 #endif
 
     return 0;
@@ -378,7 +379,7 @@ int homeAssistant_mqtt_port_subscribe(const char* topic, int qos)
     else {
         HA_LOG_E("[%s:%d]param is null\r\n", __func__, __LINE__);
         return -1;
-}
+    }
 #endif
     return 0;
 }

@@ -456,14 +456,14 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list);
 void homeAssistant_device_send_status(bool status);
 
 /**
- * @brief homeAssistan_device_send_entity_state
+ * @brief homeAssistant_device_send_entity_state
  *       发送实体状态
  * @param entity_type 实体类型
  * @param ha_entity_list 相应实体结构体
  * @param state 状态
  * @return int 成功返回消息ID，失败返回-1
 */
-int homeAssistan_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state);
+int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state);
 /**
  * @brief homeAssisatant_fine_entity
  *          查找实体
@@ -471,8 +471,7 @@ int homeAssistan_device_send_entity_state(char* entity_type, void* ha_entity_lis
  * @param unique_id 实体的 unique id
  * @return void* 返回的实体指针
 */
-void* homeAssisatant_fine_entity(char* entity_type, const char* unique_id);
-
+void* homeAssistant_fine_entity(char* entity_type, const char* unique_id);
 
 #endif
 

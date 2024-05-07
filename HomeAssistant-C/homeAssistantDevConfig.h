@@ -12,6 +12,7 @@
 #ifndef HOMEASSISTANTDEVCONFIG_H
 #define HOMEASSISTANTDEVCONFIG_H
 
+
 /***********  设备信息  **********/
 #define CONFIG_HA_DEVICE_NAME "Ai-M61_DEV"                                 //设备名称
 #define CONFIG_HA_DEVICE_HW_VERSION "Ai-M61-32S-Kit_01"                    //硬件版本号

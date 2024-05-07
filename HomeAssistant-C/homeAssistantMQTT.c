@@ -507,82 +507,89 @@ void update_all_entity_to_homeassistant(void)
     int ret = 0;
     {
         ha_sw_entity_t* switch_cur = ha_device->entity_switch->switch_list->next;
-        while (switch_cur!=ha_device->entity_switch->switch_list) {
-            if (switch_cur->entity_config_topic!=NULL) {
-                homeAssistant_create_switch_data(switch_cur, homeAssistant_device_create());
-                ret = homeAssistant_mqtt_port_public(switch_cur->entity_config_topic, switch_cur->config_data, 0, 0);
-                if (ret==0)
+        if (switch_cur!=ha_device->entity_switch->switch_list) {
+            while (switch_cur!=ha_device->entity_switch->switch_list) {
+                if (switch_cur->entity_config_topic!=NULL) {
+                    homeAssistant_create_switch_data(switch_cur, homeAssistant_device_create());
+                    homeAssistant_mqtt_port_public(switch_cur->entity_config_topic, switch_cur->config_data, 0, 0);
                     vPortFree(switch_cur->config_data);
-            }
-            //实体上线
-            if (switch_cur->availability_topic!=NULL)
-                ret = homeAssistant_mqtt_port_public(switch_cur->availability_topic, switch_cur->payload_available, 0, 0);
-            else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
-            //实体上报当前状态
-            if (ha_device->entity_switch->command_switch!=NULL)
-                homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_SWITCH, ha_device->entity_switch->command_switch, ha_device->entity_switch->command_switch->switch_state);
-            else
-                homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_SWITCH, switch_cur, switch_cur->switch_state);
+                }
+                //实体上线
+                if (switch_cur->availability_topic!=NULL)
+                    ret = homeAssistant_mqtt_port_public(switch_cur->availability_topic, switch_cur->payload_available, 0, 0);
+                else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
+                //实体上报当前状态
+                if (ha_device->entity_switch->command_switch!=NULL)
+                    homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_SWITCH, ha_device->entity_switch->command_switch, ha_device->entity_switch->command_switch->switch_state);
+                else
+                    homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_SWITCH, switch_cur, switch_cur->switch_state);
 
-            switch_cur = switch_cur->next;
+                switch_cur = switch_cur->next;
+            }
         }
+
     }
     //更新所有light 实体
     {
         ha_lh_entity_t* light_cur = ha_device->entity_light->light_list->next;
-        while (light_cur!=ha_device->entity_light->light_list) {
-            homeAssistant_create_light_data(light_cur, homeAssistant_device_create());
-            ret = homeAssistant_mqtt_port_public(light_cur->entity_config_topic, light_cur->config_data, 0, 0);
-            if (ret==0)
+        if (light_cur!=ha_device->entity_light->light_list) {
+            while (light_cur!=ha_device->entity_light->light_list) {
+                homeAssistant_create_light_data(light_cur, homeAssistant_device_create());
+                ret = homeAssistant_mqtt_port_public(light_cur->entity_config_topic, light_cur->config_data, 0, 0);
                 vPortFree(light_cur->config_data);
-            //实体上线
-            if (light_cur->availability_topic!=NULL)
-                ret = homeAssistant_mqtt_port_public(light_cur->availability_topic, light_cur->payload_available, 0, 0);
-            else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
-            //实体上报当前状态
-            if (ha_device->entity_light->command_light!=NULL)
-                homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_LIGHT, ha_device->entity_light->command_light, ha_device->entity_light->command_light->light_state);
-            else
-                homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_LIGHT, light_cur, light_cur->light_state);
-            light_cur = light_cur->next;
+                //实体上线
+                if (light_cur->availability_topic!=NULL)
+                    ret = homeAssistant_mqtt_port_public(light_cur->availability_topic, light_cur->payload_available, 0, 0);
+                else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
+                //实体上报当前状态
+                if (ha_device->entity_light->command_light!=NULL)
+                    homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_LIGHT, ha_device->entity_light->command_light, ha_device->entity_light->command_light->light_state);
+                else
+                    homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_LIGHT, light_cur, light_cur->light_state);
+                light_cur = light_cur->next;
+            }
         }
+
     }
     //更新所有sensor 实体
     {
         ha_sensor_entity_t* sensor_cur = ha_device->entity_sensor->sensor_list->next;
-        while (sensor_cur!=ha_device->entity_sensor->sensor_list) {
-            if (sensor_cur->entity_config_topic!=NULL) {
-                homeAssistant_create_light_data(sensor_cur, homeAssistant_device_create());
-                ret = homeAssistant_mqtt_port_public(sensor_cur->entity_config_topic, sensor_cur->config_data, 0, 0);
-                if (ret==0)
+        if (sensor_cur!=ha_device->entity_sensor->sensor_list) {
+            while (sensor_cur!=ha_device->entity_sensor->sensor_list) {
+                if (sensor_cur->entity_config_topic!=NULL) {
+                    homeAssistant_create_light_data(sensor_cur, homeAssistant_device_create());
+                    homeAssistant_mqtt_port_public(sensor_cur->entity_config_topic, sensor_cur->config_data, 0, 0);
                     vPortFree(sensor_cur->config_data);
+                }
+                //实体上线
+                if (sensor_cur->availability_topic!=NULL)
+                    ret = homeAssistant_mqtt_port_public(sensor_cur->availability_topic, sensor_cur->payload_available, 0, 0);
+                else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
+                //更新实体状态
+                homeAssistant_device_send_entity_state(ha_device->entity_sensor->entity_type, sensor_cur, 0);
+                sensor_cur = sensor_cur->next;
             }
-            //实体上线
-            if (sensor_cur->availability_topic!=NULL)
-                ret = homeAssistant_mqtt_port_public(sensor_cur->availability_topic, sensor_cur->payload_available, 0, 0);
-            else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
-            //更新实体状态
-            homeAssistant_device_send_entity_state(ha_device->entity_sensor->entity_type, sensor_cur, 0);
-            sensor_cur = sensor_cur->next;
         }
+
     }
     //更新所有binary_sensor 实体
     {
         ha_Bsensor_entity_t* binary_sensor_cur = ha_device->entity_binary_sensor->binary_sensor_list->next;
-        while (binary_sensor_cur!= ha_device->entity_binary_sensor->binary_sensor_list) {
-
-            homeAssistant_create_light_data(binary_sensor_cur, homeAssistant_device_create());
-            ret = homeAssistant_mqtt_port_public(binary_sensor_cur->entity_config_topic, binary_sensor_cur->config_data, 0, 0);
-            if (ret==0)
+        if (binary_sensor_cur!=ha_device->entity_binary_sensor->binary_sensor_list) {
+            while (binary_sensor_cur!= ha_device->entity_binary_sensor->binary_sensor_list) {
+                homeAssistant_create_light_data(binary_sensor_cur, homeAssistant_device_create());
+                homeAssistant_mqtt_port_public(binary_sensor_cur->entity_config_topic, binary_sensor_cur->config_data, 0, 0);
                 vPortFree(binary_sensor_cur->config_data);
-            //实体上线
-            if (binary_sensor_cur->availability_topic!=NULL)
-                ret = homeAssistant_mqtt_port_public(binary_sensor_cur->availability_topic, binary_sensor_cur->payload_available, 0, 0);
-            else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
-            //更新实体状态
-            homeAssistant_device_send_entity_state(ha_device->entity_binary_sensor->entity_type, binary_sensor_cur, binary_sensor_cur->state);
-            binary_sensor_cur = binary_sensor_cur->next;
+                //实体上线
+                if (binary_sensor_cur->availability_topic!=NULL)
+                    ret = homeAssistant_mqtt_port_public(binary_sensor_cur->availability_topic, binary_sensor_cur->payload_available, 0, 0);
+                else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 0);
+                //更新实体状态
+                homeAssistant_device_send_entity_state(ha_device->entity_binary_sensor->entity_type, binary_sensor_cur, binary_sensor_cur->state);
+                binary_sensor_cur = binary_sensor_cur->next;
+            }
         }
+
     }
 
 }

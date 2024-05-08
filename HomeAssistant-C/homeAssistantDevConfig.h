@@ -20,7 +20,7 @@
 #define CONFIG_HA_DEVICE_MANUFACTURER "安信可科技"                          //产商名称
 #define CONFIG_HA_DEVICE_IDENTIFIERS "aithinker_ai_m61_kit01"              //唯一标识符，序列号
 #define CONFIG_HA_DEVICE_CONNECTIONS "connections"                         //连接信息，这里是json的名称例如： "connections": [["mac", "02:5b:26:a8:dc:12"]]
-
+#define CONFIG_HA_DEVICE_MODULE "Ai-M6x"                                   //模组名称
 /***********  MQTT 服务器信息****************/
 #define CONFIG_HA_MQTT_SERVER_HOST "wx.ai-thinker.com"                     //服务器的URL,支持域名解析，通常：mqtt://192.168.1.10
 #define CONFIG_HA_MQTT_SERVER_PORT 1883                                    //MQTT 端口号

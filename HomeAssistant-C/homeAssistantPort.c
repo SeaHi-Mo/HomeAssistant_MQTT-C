@@ -13,11 +13,13 @@
 #include <stdlib.h>
 #include "homeAssistantPort.h"
 
-// #define CONFIG_Ai_M6x
-#define CONFIG_Ai_WB2
+#define CONFIG_Ai_M6x
+// #define CONFIG_Ai_WB2
 homeAssisatnt_device_t* ha_device;
 extern  void update_all_entity_to_homeassistant(void);
 extern  ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len, const char* data, unsigned short data_len);
+
+
 #ifdef CONFIG_Ai_M6x
 #include "aiio_mqtt_client.h"
 #include "aiio_wifi.h"
@@ -304,6 +306,7 @@ int homeAssistant_mqtt_port_stop(void)
         return -1;
     }
 #endif
+#ifdef CONFIG_Ai_WB2
     //安信可Ai-WB2 系列模组例子
     if (client!=NULL) {
         ret = axk_mqtt_client_disconnect(client);
@@ -315,8 +318,6 @@ int homeAssistant_mqtt_port_stop(void)
         HA_LOG_E("[%s:%d]param is null\r\n", __func__, __LINE__);
         return -1;
     }
-#ifdef CONFIG_Ai_WB2
-
 #endif
     return ret;
 }

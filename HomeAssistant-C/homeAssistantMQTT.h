@@ -466,7 +466,7 @@ void homeAssistant_device_send_status(bool status);
 int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state);
 /**
  * @brief homeAssisatant_fine_entity
- *          查找实体
+ *          通过unique id 查找实体，这个功能必须自定义unique_id 如果使用随机的unique_id 则会无法查找
  * @param entity_type 实体类型
  * @param unique_id 实体的 unique id
  * @return void* 返回的实体指针

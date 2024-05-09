@@ -63,4 +63,86 @@
 #define CONFIG_HA_ENTITY_VALVE               "valve"                       //阀门实体
 #define CONFIG_HA_ENTITY_WATER_HEATER        "water_heater"                //热水器实体
 
+/**********************  需要开启的实体 *************************/
+//报警控制面板 实体 默认不开启，需要使用就置 1
+#define CONFIG_ENTITY_ENABLE_ALARM_CONTROL_PANEL 0    
+
+//高低电平传感器 实体     默认不开启，需要使用就置 1
+#define CONFIG_ENTITY_ENABLE_BINARY_SENSOR 0  
+
+//按钮实体     默认不开启，需要使用就置 1         
+#define CONFIG_ENTITY_ENABLE_BUTTON 0   
+
+//摄像头实体   默认不开启，需要使用就置 1               
+#define CONFIG_ENTITY_ENABLE_CAMERA 0  
+
+//门类实体，窗帘、车门等   默认不开启，需要使用就置 1                  
+#define CONFIG_ENTITY_ENABLE_COVER 0     
+
+//跟踪器实体，GPS定位等  默认不开启，需要使用就置 1                  
+#define CONFIG_ENTITY_ENABLE_DEVICE_TRACKER 0     
+
+//触发器实体    默认不开启，需要使用就置 1    
+#define CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER 0  
+
+//时间实体    默认不开启，需要使用就置 1      
+#define CONFIG_ENTITY_ENABLE_EVENT 0     
+
+//风扇实体    默认不开启，需要使用就置 1               
+#define CONFIG_ENTITY_ENABLE_FAN  0  
+
+//加湿器实体  默认不开启，需要使用就置 1                   
+#define CONFIG__ENTITY_ENABLE_HUMIDIFIER  0   
+
+//图片实体      默认不开启，需要使用就置 1        
+#define CONFIG_ENTITY_ENABLE_IMAGE 0   
+
+//空调实体  默认不开启，需要使用就置 1                  
+#define CONFIG_ENTITY_ENABLE_CLIMATE_HVAC 0    
+
+//割草机实体   默认不开启，需要使用就置 1          
+#define CONFIG_ENTITY_ENABLE_LAWN_MOWER 0     
+
+//灯实体  默认不开启，需要使用就置 1           
+#define CONFIG_ENTITY_ENABLE_LIGHT 0       
+
+//门锁实体   默认不开启，需要使用就置 1           
+#define CONFIG_ENTITY_ENABLE_LOCK 0         
+
+//数字实体   默认不开启，需要使用就置 1          
+#define CONFIG_ENTITY_ENABLE_NUMBER 0   
+
+ //场景实体   默认不开启，需要使用就置 1                 
+#define CONFIG_ENTITY_ENABLE_SCENE 0  
+
+ //选择器实体  默认不开启，需要使用就置 1                 
+#define CONFIG_ENTITY_ENABLE_SELECT 0      
+
+//传感器实体   默认不开启，需要使用就置 1            
+#define CONFIG_ENTITY_ENABLE_SENSOR 0    
+
+//警报器实体  默认不开启，需要使用就置 1                
+#define CONFIG_ENTITY_ENABLE_SIREN 0     
+
+//开关实体   默认开启        
+#define CONFIG_ENTITY_ENABLE_SWITCH 1
+
+//更新实体   默认不开启，需要使用就置 1                   
+#define CONFIG_ENTITY_ENABLE_UPDATE  0     
+
+ //标签扫描仪实体   默认不开启，需要使用就置 1                      
+#define CONFIG_ENTITY_ENABLE_TAG_SCANNER 0 
+
+ //文本实体  默认不开启，需要使用就置 1            
+#define CONFIG_ENTITY_ENABLE_TEXT 0      
+
+//真空吸尘器实体   默认不开启，需要使用就置 1              
+#define CONFIG_ENTITY_ENABLE_VACUUM  0      
+
+ //阀门实体  默认不开启，需要使用就置 1             
+#define CONFIG_ENTITY_ENABLE_VALVE 0        
+
+//热水器实体  默认不开启，需要使用就置 1            
+#define CONFIG_ENTITY_ENABLE_WATER_HEATER 0             
+
 #endif

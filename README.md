@@ -1,5 +1,12 @@
 # HomeAssistant-C
-
+HomeAssistant-C 主要用于Ai-M6x 和Ai-WB2系列模组进行MQTT通讯，并接入HomeAssistant。目前已开发完成的实体有：
+|实体类型|实体名称|状态|
+| :-: | :-: |  :-:  |
+|switch|开关|✔|
+|sensor|传感器|✔|
+|binary sensor|二进制传感器|✔|
+|Light|灯|✔|
+|Text|文本|✔|
 ## 移植说明
 
 ### 步骤一

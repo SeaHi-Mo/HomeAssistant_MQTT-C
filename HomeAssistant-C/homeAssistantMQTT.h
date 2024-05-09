@@ -24,12 +24,14 @@ typedef enum {
     HA_EVENT_NONE = 0,
     HA_EVENT_MQTT_CONNECED, //服务器连接成功事件
     HA_EVENT_MQTT_DISCONNECT,//服务器断开事件
+    HA_EVENT_HOMEASSISTANT_STATUS_ONLINE, //HomeAssisstant 在线事件
+    HA_EVENT_HOMEASSISTANT_STATUS_OFFLINE, //HomeAssistant 掉线事件
     HA_EVENT_MQTT_COMMAND_SWITCH,//服务器下发开关命令事件，当在HA操作开关时，会触发这个事件
     HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH,//light 灯的开关事件
     HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE,//light 灯的RGB 颜色下发事件
     HA_EVENT_MQTT_COMMAND_LIGHT_BRIGHTNESS,//light 灯的亮度数据下发事件
-    HA_EVENT_HOMEASSISTANT_STATUS_ONLINE,
-    HA_EVENT_HOMEASSISTANT_STATUS_OFFLINE,
+    HA_EVENT_MQTT_COMMAND_TEXT_VALUE,  //服务器下发text内容事件
+
     HA_EVENT_MQTT_ERROR,
 }ha_event_t;
 
@@ -73,6 +75,8 @@ typedef struct homeAssisatnt_mqtt_info {
  * @brief switch实体信息
  * @brief 成员含义可以参考：https://www.home-assistant.io/integrations/switch.mqtt/
 */
+#if CONFIG_ENTITY_ENABLE_SWITCH
+
 typedef struct homeAssisatnt_entity_switch {
     char* name;                   //实体名称 必须要赋值
     char* entity_config_topic;    //实体自动发现需要的topic，已经自动赋值，可以不配置
@@ -93,7 +97,7 @@ typedef struct homeAssisatnt_entity_switch {
     char* payload_not_available;   //离线消息内容 默认"offline"
     char* payload_off;             //开关状态内容，默认"ON"
     char* payload_on;               //开关状态内容，默认"OFF"
-    char qos;                      //消息服务质量
+    int qos;                      //消息服务质量
     bool retain;                       //是否保留该信息     
     char* state_off;               //状态 关          
     char* state_on;                  //状态 开
@@ -110,11 +114,13 @@ typedef struct {
     ha_sw_entity_t* switch_list;
     ha_sw_entity_t* command_switch;
 }ha_swlist_t;
+#endif
 
 /**
  * @brief ligth实体信息
  * @brief 成员含义可以参考：https://www.home-assistant.io/integrations/switch.mqtt/
 */
+#if CONFIG_ENTITY_ENABLE_LIGHT
 struct light_brightness_t {
     char* brightness_command_topic;
     char* brightness_command_template;
@@ -205,7 +211,7 @@ typedef  struct homeAssisatnt_entity_light {
     char* payload_not_available;
     char* payload_off;
     char* payload_on;
-    char qos;
+    int qos;
     char* config_data;
     struct light_brightness_t brightness;
     struct light_color_temp_t color_temp;
@@ -231,11 +237,13 @@ typedef struct {
     ha_lh_entity_t* light_list;
     ha_lh_entity_t* command_light;
 }ha_lhlist_t;
+#endif
 
 /**
  * @brief 传感器实体
  *
 */
+#if CONFIG_ENTITY_ENABLE_SENSOR
 typedef enum {
     Class_None = 0,
     Class_apparent_power,
@@ -310,7 +318,8 @@ typedef  struct homeAssisatnt_entity_sensor {
     char* json_attributes_template;
     char* json_attributes_topic;
     char* last_reset_value_template;
-    char qos;
+    int qos;
+    bool retain;
     char* state_class;
     char* state_topic;
     char* unit_of_measurement;
@@ -328,11 +337,12 @@ typedef struct {
     ha_sensor_entity_t* sensor_list;
 }ha_sensorlist_t;
 
-
+#endif
 /**
  * @brief 二进制传感器实体
  *
 */
+#if CONFIG_ENTITY_ENABLE_BINARY_SENSOR
 typedef enum {
     Bclass_None = 0,
     Bclass_battery,
@@ -381,7 +391,8 @@ typedef  struct homeAssisatnt_entity_binary_sensor {
     char* icon;
     char* json_attributes_template;
     char* json_attributes_topic;
-    char qos;
+    int qos;
+    bool retain;
     char* state_class;
     char* state_topic;
     char* value_template;
@@ -399,6 +410,55 @@ typedef struct {
     char* entity_type;
     ha_Bsensor_entity_t* binary_sensor_list;
 }ha_binary_sensorlist_t;
+#endif
+/**
+ * @brief Text 文本实体
+ *
+*/
+#if CONFIG_ENTITY_ENABLE_TEXT
+typedef  struct homeAssisatnt_entity_text {
+    char* name;
+    char* entity_config_topic;
+    char* config_data;
+    char* object_id;
+    char* unique_id;
+
+    char* availability_mode;
+    char* availability_template;
+    char* availability_topic;
+
+    char* payload_available;
+    char* payload_not_available;
+    bool enabled_by_default;
+    char* encoding;
+
+    char* entity_category;
+    char* icon;
+    char* json_attributes_template;
+    char* json_attributes_topic;
+    int max;  //默认255
+    int min;  //默认 0
+    char* mode; //关闭文本实体的模式
+    char* pattern;//要设置或接收的文本必须与有效的正则表达式匹配。
+    char* command_template;//接收文本的格式
+    char* command_topic;//接收文本的主题
+
+    int qos;
+    bool retain;
+    char* state_topic;//返回发布文本的主题
+    char* value_template;//发布文本的格式
+
+    char* text_value;   //当前文本内容
+    struct homeAssisatnt_entity_text* prev;
+    struct homeAssisatnt_entity_text* next;
+}ha_text_entity_t;
+
+typedef struct {
+    char* entity_type;
+    ha_text_entity_t* text_list;
+    ha_text_entity_t* command_text;
+}ha_text_list_t;
+#endif
 /**
  * @brief  设备信息
  *
@@ -416,10 +476,24 @@ typedef struct homeAssisatnt_device {
     char* payload_available;
     char* payload_not_available;
     homeAssisatnt_netinfo_t wifi_info;
+#if CONFIG_ENTITY_ENABLE_SWITCH
     ha_swlist_t* entity_switch;
+#endif
+
+#if CONFIG_ENTITY_ENABLE_LIGHT
     ha_lhlist_t* entity_light;
+#endif
+
+#if CONFIG_ENTITY_ENABLE_SENSOR 
     ha_sensorlist_t* entity_sensor;
+#endif
+#if CONFIG_ENTITY_ENABLE_BINARY_SENSOR 
     ha_binary_sensorlist_t* entity_binary_sensor;
+#endif
+
+#if CONFIG_ENTITY_ENABLE_TEXT
+    ha_text_list_t* entity_text;
+#endif
     ha_mqtt_info_t mqtt_info;
     bool homeassistant_online;
     void (*event_cb)(ha_event_t event, struct homeAssisatnt_device* ha_dev);

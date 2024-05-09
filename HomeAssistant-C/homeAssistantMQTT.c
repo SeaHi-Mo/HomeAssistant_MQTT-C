@@ -581,7 +581,6 @@ static void  entity_text_add_node(ha_text_entity_t* text_new_node)
         text_new_node->entity_config_topic = pvPortMalloc(128);
         memset(text_new_node->entity_config_topic, 0, 128);
         sprintf(text_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_TEXT, text_new_node->unique_id);
-        HA_LOG_F("%s\r\n", text_new_node->entity_config_topic);
     }
     if (ha_device->mqtt_info.mqtt_connect_status) {
         homeAssistant_mqtt_port_public(text_new_node->entity_config_topic, text_new_node->config_data, 1, 1);
@@ -597,7 +596,6 @@ static void  entity_text_add_node(ha_text_entity_t* text_new_node)
         char* value_buff = pvPortMalloc(256);
         memset(value_buff, 0, 256);
         sprintf(value_buff, "%s", text_new_node->text_value);
-        HA_LOG_D("value_buff=%s\r\n", value_buff);
         memset(text_new_node->text_value, 0, strlen(text_new_node->text_value));
         text_new_node->text_value = pvPortMalloc(256);
         memset(text_new_node->text_value, 0, 256);
@@ -1025,7 +1023,7 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
         entity_text_add_node(text_node);
     }
 #endif
-}
+    }
 
 int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state)
 {
@@ -1059,7 +1057,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
         else {
             ret_id = homeAssistant_mqtt_port_public(light_node->state_topic, state?"ON":"OFF", 0, 0);
         }
-}
+    }
 #endif
 #if CONFIG_ENTITY_ENABLE_SENSOR 
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_SENSOR)) {
@@ -1090,15 +1088,13 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_TEXT)) {
         ha_text_entity_t* text_node = (ha_text_entity_t*)ha_entity_list;
         if (text_node->text_value!=NULL&& text_node->state_topic!=NULL) {
-            HA_LOG_I("开始发布数据\r\n");
-
             ret_id = homeAssistant_mqtt_port_public(text_node->state_topic, text_node->text_value, 0, 1);
         }
         else HA_LOG_E("text value is null\r\n");
     }
 #endif
     return ret_id;
-}
+    }
 
 void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
 {
@@ -1170,4 +1166,4 @@ void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
 #endif
     HA_LOG_E("There is no %s entity unique id %s\r\n", entity_type, unique_id);
     return NULL;
-}
+    }

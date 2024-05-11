@@ -13,8 +13,7 @@
 #include <stdlib.h>
 #include "homeAssistantPort.h"
 
-#define CONFIG_Ai_M6x
-// #define CONFIG_Ai_WB2
+
 homeAssisatnt_device_t* ha_device;
 extern  void update_all_entity_to_homeassistant(void);
 extern  ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len, const char* data, unsigned short data_len);
@@ -25,7 +24,6 @@ extern  ha_event_t homeAssistant_get_command(const char* topic, unsigned short t
 #include "aiio_wifi.h"
 
 aiio_mqtt_client_handle_t client;
-
 
 static void HA_LOG_Error_if_nonzero(const char* message, int error_code)
 {
@@ -317,7 +315,7 @@ int homeAssistant_mqtt_port_stop(void)
     else {
         HA_LOG_E("[%s:%d]param is null\r\n", __func__, __LINE__);
         return -1;
-    }
+}
 #endif
     return ret;
 }
@@ -335,8 +333,10 @@ int homeAssistant_mqtt_port_public(const char* topic, const char* payload, int q
 {
     //安信可Ai-M6x 系列模组例子
 #ifdef CONFIG_Ai_M6x
-    if (client!=NULL && topic!=NULL &&  payload!=NULL)
+    if (client!=NULL && topic!=NULL &&  payload!=NULL) {
+
         return aiio_mqtt_client_publish(client, topic, payload, strlen(payload), qos, retain);
+    }
     else {
         HA_LOG_E("[%s:%d]param is null\r\n", __func__, __LINE__);
         return -1;

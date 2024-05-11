@@ -499,10 +499,12 @@ typedef struct homeAssisatnt_device {
     void (*event_cb)(ha_event_t event, struct homeAssisatnt_device* ha_dev);
 }homeAssisatnt_device_t;
 
+
 /**
- * @brief homeAssistant 初始化，里面包含了设备的默认信息的定义，MQTT的初始化
+ * @brief HomeAssistant 库初始化函数
  *
- * @param ha_dev 设备句柄
+ * @param ha_dev HomeAssistant 设备句柄
+ * @param event_cb HomeAssistant 事件回调函数
 */
 void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(ha_event_t, homeAssisatnt_device_t*));
 /**

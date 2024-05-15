@@ -299,7 +299,7 @@ static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char
  * @brief 传感器开关实体
  *
 */
-#if CONFIG_ENTITY_ENABLE_LIGHT
+#if CONFIG_ENTITY_ENABLE_SENSOR
 static char* sensor_class_type[] = { "None","apparent_power","aqi","atmospheric_pressure","battery",\
 "carbon_dioxide","carbon_monoxide","current","data_rate","data_size","date","distance","duration",\
 "energy","energy_storage","enum","frequency","gas","humidity","illuminance","irradiance","moisture",\
@@ -396,7 +396,7 @@ static void  entity_sensor_add_node(ha_sensor_entity_t* sensor_new_node)
  * @brief 二进制传感器
  *
 */
-#if CONFIG_ENTITY_ENABLE_BIANRY_SENSOR
+#if CONFIG_ENTITY_ENABLE_BINARY_SENSOR
 static char* Bsensor_class_type[] = { "None","battery","battery_charging","carbon_monoxide","cold","connectivity","door","garage_door",\
     "gas","heat","light","lock","moisture","motion","moving","occupancy","opening","plug","power", "presence", "problem", "running","safety", "smoke", "sound", "tamper", "update", "vibration", "window" };
 
@@ -493,8 +493,6 @@ static void  entity_binary_sensor_add_node(ha_Bsensor_entity_t* binary_sensor_ne
 #endif
 
 #if CONFIG_ENTITY_ENABLE_TEXT
-
-
 static void homeAssistant_create_text_data(ha_text_entity_t* text_entity, cJSON* device_json)
 {
     if (text_entity==NULL) {
@@ -762,7 +760,7 @@ void update_all_entity_to_homeassistant(void)
     if (sensor_cur!=ha_device->entity_sensor->sensor_list) {
         while (sensor_cur!=ha_device->entity_sensor->sensor_list) {
             if (sensor_cur->entity_config_topic!=NULL) {
-                homeAssistant_create_light_data(sensor_cur, homeAssistant_device_create());
+                homeAssistant_create_sensor_data(sensor_cur, homeAssistant_device_create());
                 homeAssistant_mqtt_port_public(sensor_cur->entity_config_topic, sensor_cur->config_data, 0, 0);
                 vPortFree(sensor_cur->config_data);
             }
@@ -782,7 +780,7 @@ void update_all_entity_to_homeassistant(void)
     ha_Bsensor_entity_t* binary_sensor_cur = ha_device->entity_binary_sensor->binary_sensor_list->next;
     if (binary_sensor_cur!=ha_device->entity_binary_sensor->binary_sensor_list) {
         while (binary_sensor_cur!= ha_device->entity_binary_sensor->binary_sensor_list) {
-            homeAssistant_create_light_data(binary_sensor_cur, homeAssistant_device_create());
+            homeAssistant_create_binary_sensor_data(binary_sensor_cur, homeAssistant_device_create());
             homeAssistant_mqtt_port_public(binary_sensor_cur->entity_config_topic, binary_sensor_cur->config_data, 0, 1);
             vPortFree(binary_sensor_cur->config_data);
             //实体上线
@@ -1023,7 +1021,7 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
         entity_text_add_node(text_node);
     }
 #endif
-    }
+}
 
 int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state)
 {
@@ -1094,7 +1092,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
     }
 #endif
     return ret_id;
-    }
+}
 
 void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
 {
@@ -1166,4 +1164,4 @@ void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
 #endif
     HA_LOG_E("There is no %s entity unique id %s\r\n", entity_type, unique_id);
     return NULL;
-    }
+}

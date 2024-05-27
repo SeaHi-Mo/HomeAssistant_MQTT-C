@@ -591,10 +591,13 @@ static void  entity_text_add_node(ha_text_entity_t* text_new_node)
     }
     //创建时检查默认内容是否存在
     if (text_new_node->text_value!=NULL) {
+        //缓存内容
         char* value_buff = pvPortMalloc(256);
         memset(value_buff, 0, 256);
         sprintf(value_buff, "%s", text_new_node->text_value);
         memset(text_new_node->text_value, 0, strlen(text_new_node->text_value));
+        text_new_node->text_value = NULL;
+        //重新申请空间
         text_new_node->text_value = pvPortMalloc(256);
         memset(text_new_node->text_value, 0, 256);
         sprintf(text_new_node->text_value, "%s", value_buff);
@@ -689,6 +692,9 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
 
     while (text_cur!=ha_device->entity_text->text_list) {
         if (!strncmp(topic, text_cur->command_topic, topic_len)) {
+            if (text_cur->text_value==NULL) {
+                text_cur->text_value = pvPortMalloc(256);
+            }
             memset(text_cur->text_value, 0, 256);
             strncpy(text_cur->text_value, data, data_len);
             event = HA_EVENT_MQTT_COMMAND_TEXT_VALUE;

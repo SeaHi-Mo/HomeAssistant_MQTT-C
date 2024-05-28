@@ -104,7 +104,7 @@
 #define CONFIG_ENTITY_ENABLE_LAWN_MOWER 0     
 
 //灯实体  默认不开启，需要使用就置 1           
-#define CONFIG_ENTITY_ENABLE_LIGHT 0       
+#define CONFIG_ENTITY_ENABLE_LIGHT 0      
 
 //门锁实体   默认不开启，需要使用就置 1           
 #define CONFIG_ENTITY_ENABLE_LOCK 0         
@@ -134,7 +134,7 @@
 #define CONFIG_ENTITY_ENABLE_TAG_SCANNER 0 
 
  //文本实体  默认不开启，需要使用就置 1            
-#define CONFIG_ENTITY_ENABLE_TEXT 1     
+#define CONFIG_ENTITY_ENABLE_TEXT 0    
 
 //真空吸尘器实体   默认不开启，需要使用就置 1              
 #define CONFIG_ENTITY_ENABLE_VACUUM  0      

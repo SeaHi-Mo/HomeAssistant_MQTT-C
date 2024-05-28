@@ -26,11 +26,20 @@ typedef enum {
     HA_EVENT_MQTT_DISCONNECT,//服务器断开事件
     HA_EVENT_HOMEASSISTANT_STATUS_ONLINE, //HomeAssisstant 在线事件
     HA_EVENT_HOMEASSISTANT_STATUS_OFFLINE, //HomeAssistant 掉线事件
+#if CONFIG_ENTITY_ENABLE_SWITCH  
     HA_EVENT_MQTT_COMMAND_SWITCH,//服务器下发开关命令事件，当在HA操作开关时，会触发这个事件
+#endif
+#if CONFIG_ENTITY_ENABLE_LIGHT
     HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH,//light 灯的开关事件
     HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE,//light 灯的RGB 颜色下发事件
     HA_EVENT_MQTT_COMMAND_LIGHT_BRIGHTNESS,//light 灯的亮度数据下发事件
+#endif
+#if CONFIG_ENTITY_ENABLE_TEXT
     HA_EVENT_MQTT_COMMAND_TEXT_VALUE,  //服务器下发text内容事件
+#endif
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    HA_EVENT_MQTT_COMMAND_NUMBER_VALUE,
+#endif
 
     HA_EVENT_MQTT_ERROR,
 }ha_event_t;
@@ -243,7 +252,7 @@ typedef struct {
  * @brief 传感器实体
  *
 */
-#if CONFIG_ENTITY_ENABLE_SENSOR
+#if (CONFIG_ENTITY_ENABLE_SENSOR || CONFIG_ENTITY_ENABLE_NUMBER)
 typedef enum {
     Class_None = 0,
     Class_apparent_power,
@@ -298,7 +307,8 @@ typedef enum {
     Class_weight,
     Class_wind_speed
 }ha_sensor_class_t;
-
+#endif
+#if CONFIG_ENTITY_ENABLE_SENSOR
 typedef  struct homeAssisatnt_entity_sensor {
     char* name;
     char* entity_config_topic;
@@ -460,6 +470,62 @@ typedef struct {
 }ha_text_list_t;
 #endif
 /**
+ * @brief 数字实体
+ *
+*/
+#if CONFIG_ENTITY_ENABLE_NUMBER
+
+typedef  struct homeAssisatnt_entity_number {
+    char* name;
+    char* entity_config_topic;
+    char* config_data;
+    char* object_id;
+    char* unique_id;
+
+    char* availability_mode;
+    char* availability_template;
+    char* availability_topic;
+
+    char* payload_available;
+    char* payload_not_available;
+    char* payload_reset;
+    bool enabled_by_default;
+    char* encoding;
+
+    char* entity_category;
+    char* icon;
+    char* json_attributes_template;
+    char* json_attributes_topic;
+
+    int max;  //默认255
+    int min;  //默认 0
+    char* mode; //关闭数字实体的模式
+    char* pattern;//要设置或接收的数字必须与有效的正则表达式匹配。
+    char* command_template;//接收数字的格式
+    char* command_topic;//接收数字的主题
+    ha_sensor_class_t device_class;
+    bool optimistic;
+    int qos;
+    bool retain;
+    char* state_topic;//返回发布数字的主题
+    char* unit_of_measurement;
+    char* value_template;//发布数字的格式
+    uint8_t step;
+    char* number_value;   //当前数字字符串内容
+    float number;         //当前的数字
+    struct homeAssisatnt_entity_number* prev;
+    struct homeAssisatnt_entity_number* next;
+}ha_number_entity_t;
+
+typedef struct {
+    char* entity_type;
+    ha_number_entity_t* number_list;
+    ha_number_entity_t* command_number;
+}ha_number_list_t;
+
+#endif
+
+/**
  * @brief  设备信息
  *
 */
@@ -494,6 +560,11 @@ typedef struct homeAssisatnt_device {
 #if CONFIG_ENTITY_ENABLE_TEXT
     ha_text_list_t* entity_text;
 #endif
+
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    ha_number_list_t* entity_number;
+#endif
+
     ha_mqtt_info_t mqtt_info;
     bool homeassistant_online;
     void (*event_cb)(ha_event_t event, struct homeAssisatnt_device* ha_dev);
@@ -541,7 +612,7 @@ void homeAssistant_device_send_status(bool status);
 */
 int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state);
 /**
- * @brief homeAssisatant_fine_entity
+ * @brief homeAssistant_fine_entity
  *          通过unique id 查找实体，这个功能必须自定义unique_id 如果使用随机的unique_id 则会无法查找
  * @param entity_type 实体类型
  * @param unique_id 实体的 unique id

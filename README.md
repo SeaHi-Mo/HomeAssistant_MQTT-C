@@ -11,6 +11,7 @@ HomeAssistant-C 这是一个主要为安信可WiFi 模组开发的HomeAssistant 
 |binary sensor|二进制传感器|✔|
 |Light|灯|✔|
 |Text|文本|✔|
+|Number|数字|✔|
 
 ## 基本使用方法
 

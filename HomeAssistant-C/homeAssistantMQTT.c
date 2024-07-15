@@ -141,7 +141,7 @@ static void entity_swith_add_node(ha_sw_entity_t* switch_new_node)
     if (switch_new_node->entity_config_topic==NULL) {
         switch_new_node->entity_config_topic = pvPortMalloc(128);
         memset(switch_new_node->entity_config_topic, 0, 128);
-        sprintf(switch_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_SWITCH, switch_new_node->unique_id);
+        sprintf(switch_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_SWITCH, unique_id);
     }
 
     if (ha_device->mqtt_info.mqtt_connect_status) {

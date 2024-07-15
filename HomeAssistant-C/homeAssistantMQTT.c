@@ -25,6 +25,7 @@
 static homeAssisatnt_device_t* ha_device;
 
 static uint8_t STA_MAC[6] = { 0 };
+char* unique_id = NULL;
 
 static cJSON* homeAssistant_device_create(void)
 {
@@ -79,13 +80,12 @@ static void homeAssistant_create_switch_data(ha_sw_entity_t* switch_entity, cJSO
     cJSON* root = cJSON_CreateObject();
     if (switch_entity->name!=NULL)cJSON_AddStringToObject(root, "name", switch_entity->name);
     if (switch_entity->device_class!=NULL)cJSON_AddStringToObject(root, "device_class", switch_entity->device_class);
+
     if (switch_entity->unique_id!=NULL) {
-        char* unique_id = pvPortMalloc(5);
-        memset(unique_id, 0, 5);
-        sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
-        switch_entity->unique_id = strcat(switch_entity->unique_id, unique_id);
-        cJSON_AddStringToObject(root, "unique_id", switch_entity->unique_id);
-        vPortFree(unique_id);
+        if (unique_id==NULL) unique_id = pvPortMalloc(64);
+        memset(unique_id, 0, 64);
+        sprintf(unique_id, "%s-%02x%2x", switch_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        cJSON_AddStringToObject(root, "unique_id", unique_id);
     }
     else HA_LOG_E("unique id is null for entity:%s \r\n ", switch_entity->name);
 
@@ -95,13 +95,13 @@ static void homeAssistant_create_switch_data(ha_sw_entity_t* switch_entity, cJSO
     if (switch_entity->command_topic==NULL) {
         switch_entity->command_topic = pvPortMalloc(256);
         memset(switch_entity->command_topic, 0, 256);
-        sprintf(switch_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], switch_entity->unique_id);
+        sprintf(switch_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     cJSON_AddStringToObject(root, "command_topic", switch_entity->command_topic);
     if (switch_entity->state_topic==NULL) {
         switch_entity->state_topic = pvPortMalloc(256);
         memset(switch_entity->state_topic, 0, 256);
-        sprintf(switch_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], switch_entity->unique_id);
+        sprintf(switch_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     cJSON_AddStringToObject(root, "state_topic", switch_entity->state_topic);
     if (switch_entity->payload_off==NULL)switch_entity->payload_off = "OFF";
@@ -160,6 +160,8 @@ static void entity_swith_add_node(ha_sw_entity_t* switch_new_node)
     ha_device->entity_switch->switch_list->prev = switch_new_node;
 
     vPortFree(switch_new_node->config_data);
+    vPortFree(unique_id);
+    unique_id = NULL;
 }
 #endif
 /**
@@ -183,12 +185,10 @@ static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON*
     if (light_entity->name!=NULL)cJSON_AddStringToObject(root, "name", light_entity->name);
     if (light_entity->device_class!=NULL)cJSON_AddStringToObject(root, "device_class", light_entity->device_class);
     if (light_entity->unique_id!=NULL) {
-        char* unique_id = pvPortMalloc(5);
-        memset(unique_id, 0, 5);
-        sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
-        light_entity->unique_id = strcat(light_entity->unique_id, unique_id);
-        vPortFree(unique_id);
-        cJSON_AddStringToObject(root, "unique_id", light_entity->unique_id);
+        if (unique_id==NULL) unique_id = pvPortMalloc(64);
+        memset(unique_id, 0, 64);
+        sprintf(unique_id, "%s-%02x%2x", light_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        cJSON_AddStringToObject(root, "unique_id", unique_id);
     }
     else HA_LOG_E("unique id is null for entity:%s \r\n ", light_entity->name);
     if (light_entity->object_id!=NULL)cJSON_AddStringToObject(root, "object_id", light_entity->object_id);
@@ -205,13 +205,13 @@ static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON*
     {
         light_entity->command_topic = pvPortMalloc(128);
         memset(light_entity->command_topic, 0, 128);
-        sprintf(light_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], light_entity->unique_id);
+        sprintf(light_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     if (light_entity->state_topic==NULL)
     {
         light_entity->state_topic = pvPortMalloc(128);
         memset(light_entity->state_topic, 0, 128);
-        sprintf(light_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], light_entity->unique_id);
+        sprintf(light_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
 
     cJSON_AddStringToObject(root, "command_topic", light_entity->command_topic);
@@ -243,6 +243,7 @@ static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON*
     light_entity->config_data = cJSON_PrintUnformatted(root);
 
     cJSON_Delete(root);
+
 }
 
 static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
@@ -254,7 +255,7 @@ static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
     if (light_new_node->entity_config_topic==NULL) {
         light_new_node->entity_config_topic = pvPortMalloc(128);
         memset(light_new_node->entity_config_topic, 0, 128);
-        sprintf(light_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_LIGHT, light_new_node->unique_id);
+        sprintf(light_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_LIGHT, unique_id);
     }
     if (ha_device->mqtt_info.mqtt_connect_status) {
         homeAssistant_mqtt_port_public(light_new_node->entity_config_topic, light_new_node->config_data, 1, 1);
@@ -274,6 +275,8 @@ static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
     light_new_node->next = ha_device->entity_light->light_list;
     ha_device->entity_light->light_list->prev = light_new_node;
     vPortFree(light_new_node->config_data);
+    vPortFree(unique_id);
+    unique_id = NULL;
 }
 /**
  * @brief homeAssistant_get_light_rgb
@@ -329,12 +332,10 @@ static void homeAssistant_create_sensor_data(ha_sensor_entity_t* sensor_entity, 
     if (sensor_entity->name!=NULL)cJSON_AddStringToObject(root, "name", sensor_entity->name);
     if (sensor_entity->unique_id!=NULL)
     {
-        char* unique_id = pvPortMalloc(5);
-        memset(unique_id, 0, 5);
-        sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
-        sensor_entity->unique_id = strcat(sensor_entity->unique_id, unique_id);
-        vPortFree(unique_id);
-        cJSON_AddStringToObject(root, "unique_id", sensor_entity->unique_id);
+        if (unique_id==NULL) unique_id = pvPortMalloc(64);
+        memset(unique_id, 0, 64);
+        sprintf(unique_id, "%s-%02x%2x", sensor_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        cJSON_AddStringToObject(root, "unique_id", unique_id);
     }
     else HA_LOG_E("unique id is null for entity:%s \r\n ", sensor_entity->name);
 
@@ -355,7 +356,7 @@ static void homeAssistant_create_sensor_data(ha_sensor_entity_t* sensor_entity, 
     if (sensor_entity->state_topic==NULL) {
         sensor_entity->state_topic = pvPortMalloc(128);
         memset(sensor_entity->state_topic, 0, 128);
-        sprintf(sensor_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], sensor_entity->unique_id);
+        sprintf(sensor_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }cJSON_AddStringToObject(root, "state_topic", sensor_entity->state_topic);
 
     if (sensor_entity->unit_of_measurement!=NULL) cJSON_AddStringToObject(root, "unit_of_measurement", sensor_entity->unit_of_measurement);
@@ -381,7 +382,7 @@ static void  entity_sensor_add_node(ha_sensor_entity_t* sensor_new_node)
     if (sensor_new_node->entity_config_topic==NULL) {
         sensor_new_node->entity_config_topic = pvPortMalloc(128);
         memset(sensor_new_node->entity_config_topic, 0, 128);
-        sprintf(sensor_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_SENSOR, sensor_new_node->unique_id);
+        sprintf(sensor_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_SENSOR, unique_id);
 
     }
     if (ha_device->mqtt_info.mqtt_connect_status) {
@@ -400,6 +401,8 @@ static void  entity_sensor_add_node(ha_sensor_entity_t* sensor_new_node)
     sensor_new_node->next = ha_device->entity_sensor->sensor_list;
     ha_device->entity_sensor->sensor_list->prev = sensor_new_node;
     vPortFree(sensor_new_node->config_data);
+    vPortFree(unique_id);
+    unique_id = NULL;
 }
 #endif
 /**
@@ -421,12 +424,10 @@ static void homeAssistant_create_binary_sensor_data(ha_Bsensor_entity_t* binary_
     if (binary_sensor_entity->name!=NULL)cJSON_AddStringToObject(root, "name", binary_sensor_entity->name);
     if (binary_sensor_entity->unique_id!=NULL)
     {
-        char* unique_id = pvPortMalloc(5);
-        memset(unique_id, 0, 5);
-        sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
-        binary_sensor_entity->unique_id = strcat(binary_sensor_entity->unique_id, unique_id);
-        vPortFree(unique_id);
-        cJSON_AddStringToObject(root, "unique_id", binary_sensor_entity->unique_id);
+        if (unique_id==NULL) unique_id = pvPortMalloc(64);
+        memset(unique_id, 0, 64);
+        sprintf(unique_id, "%s-%02x%2x", binary_sensor_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        cJSON_AddStringToObject(root, "unique_id", unique_id);
     }
     else HA_LOG_E("unique id is null for entity:%s \r\n", binary_sensor_entity->name);
 
@@ -450,7 +451,7 @@ static void homeAssistant_create_binary_sensor_data(ha_Bsensor_entity_t* binary_
     if (binary_sensor_entity->state_topic==NULL) {
         binary_sensor_entity->state_topic = pvPortMalloc(128);
         memset(binary_sensor_entity->state_topic, 0, 128);
-        sprintf(binary_sensor_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], binary_sensor_entity->unique_id);
+        sprintf(binary_sensor_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     cJSON_AddStringToObject(root, "state_topic", binary_sensor_entity->state_topic);
     if (binary_sensor_entity->payload_on==NULL) binary_sensor_entity->payload_on = "ON";
@@ -480,7 +481,7 @@ static void  entity_binary_sensor_add_node(ha_Bsensor_entity_t* binary_sensor_ne
     if (binary_sensor_new_node->entity_config_topic==NULL) {
         binary_sensor_new_node->entity_config_topic = pvPortMalloc(128);
         memset(binary_sensor_new_node->entity_config_topic, 0, 128);
-        sprintf(binary_sensor_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_BINARY_SENSOR, binary_sensor_new_node->unique_id);
+        sprintf(binary_sensor_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_BINARY_SENSOR, unique_id);
 
     }
     if (ha_device->mqtt_info.mqtt_connect_status) {
@@ -499,6 +500,8 @@ static void  entity_binary_sensor_add_node(ha_Bsensor_entity_t* binary_sensor_ne
     binary_sensor_new_node->next = ha_device->entity_binary_sensor->binary_sensor_list;
     ha_device->entity_binary_sensor->binary_sensor_list->prev = binary_sensor_new_node;
     vPortFree(binary_sensor_new_node->config_data);
+    vPortFree(unique_id);
+    unique_id = NULL;
 }
 #endif
 
@@ -514,15 +517,10 @@ static void homeAssistant_create_text_data(ha_text_entity_t* text_entity, cJSON*
     if (text_entity->name!=NULL)cJSON_AddStringToObject(root, "name", text_entity->name);
     if (text_entity->unique_id!=NULL)
     {
-
-        char* unique_id = unique_id = pvPortMalloc(5);
-        memset(unique_id, 0, 5);
-        sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
-        HA_LOG_F("unique_id =%s\r\n", unique_id);
-        text_entity->unique_id = strncat(text_entity->unique_id, unique_id, 5);
-        cJSON_AddStringToObject(root, "unique_id", text_entity->unique_id);
-        vPortFree(unique_id);
-
+        if (unique_id==NULL) unique_id = pvPortMalloc(64);
+        memset(unique_id, 0, 64);
+        sprintf(unique_id, "%s-%02x%2x", text_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        cJSON_AddStringToObject(root, "unique_id", unique_id);
     }
     else HA_LOG_E("unique id is null for entity:%s \r\n", text_entity->name);
 
@@ -552,14 +550,14 @@ static void homeAssistant_create_text_data(ha_text_entity_t* text_entity, cJSON*
     {
         text_entity->command_topic = pvPortMalloc(128);
         memset(text_entity->command_topic, 0, 128);
-        sprintf(text_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], text_entity->unique_id);
+        sprintf(text_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     cJSON_AddStringToObject(root, "command_topic", text_entity->command_topic);
 
     if (text_entity->state_topic==NULL) {
         text_entity->state_topic = pvPortMalloc(128);
         memset(text_entity->state_topic, 0, 128);
-        sprintf(text_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], text_entity->unique_id);
+        sprintf(text_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     cJSON_AddStringToObject(root, "state_topic", text_entity->state_topic);
 
@@ -588,7 +586,7 @@ static void  entity_text_add_node(ha_text_entity_t* text_new_node)
     if (text_new_node->entity_config_topic==NULL) {
         text_new_node->entity_config_topic = pvPortMalloc(128);
         memset(text_new_node->entity_config_topic, 0, 128);
-        sprintf(text_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_TEXT, text_new_node->unique_id);
+        sprintf(text_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_TEXT, unique_id);
     }
     if (ha_device->mqtt_info.mqtt_connect_status) {
         homeAssistant_mqtt_port_public(text_new_node->entity_config_topic, text_new_node->config_data, 1, 1);
@@ -619,6 +617,8 @@ static void  entity_text_add_node(ha_text_entity_t* text_new_node)
     text_new_node->next = ha_device->entity_text->text_list;
     ha_device->entity_text->text_list->prev = text_new_node;
     vPortFree(text_new_node->config_data);
+    vPortFree(unique_id);
+    unique_id = NULL;
 }
 #endif
 
@@ -641,14 +641,10 @@ static void homeAssistant_create_number_data(ha_number_entity_t* number_entity, 
     if (number_entity->unique_id!=NULL)
     {
 
-        char* unique_id = unique_id = pvPortMalloc(5);
-        memset(unique_id, 0, 5);
-        sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
-        HA_LOG_F("unique_id =%s\r\n", unique_id);
-        number_entity->unique_id = strncat(number_entity->unique_id, unique_id, 5);
-        cJSON_AddStringToObject(root, "unique_id", number_entity->unique_id);
-        vPortFree(unique_id);
-
+        if (unique_id==NULL) unique_id = pvPortMalloc(64);
+        memset(unique_id, 0, 64);
+        sprintf(unique_id, "%s-%02x%2x", text_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        cJSON_AddStringToObject(root, "unique_id", unique_id);
     }
     else HA_LOG_E("unique id is null for entity:%s \r\n", number_entity->name);
 
@@ -684,14 +680,14 @@ static void homeAssistant_create_number_data(ha_number_entity_t* number_entity, 
     {
         number_entity->command_topic = pvPortMalloc(128);
         memset(number_entity->command_topic, 0, 128);
-        sprintf(number_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], number_entity->unique_id);
+        sprintf(number_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     cJSON_AddStringToObject(root, "command_topic", number_entity->command_topic);
 
     if (number_entity->state_topic==NULL) {
         number_entity->state_topic = pvPortMalloc(128);
         memset(number_entity->state_topic, 0, 128);
-        sprintf(number_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], number_entity->unique_id);
+        sprintf(number_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
     }
     cJSON_AddStringToObject(root, "state_topic", number_entity->state_topic);
 
@@ -716,7 +712,7 @@ static void  entity_number_add_node(ha_number_entity_t* number_new_node)
     if (number_new_node->entity_config_topic==NULL) {
         number_new_node->entity_config_topic = pvPortMalloc(128);
         memset(number_new_node->entity_config_topic, 0, 128);
-        sprintf(number_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_TEXT, number_new_node->unique_id);
+        sprintf(number_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_TEXT, unique_id);
     }
     if (ha_device->mqtt_info.mqtt_connect_status) {
         homeAssistant_mqtt_port_public(number_new_node->entity_config_topic, number_new_node->config_data, 1, 1);
@@ -747,6 +743,8 @@ static void  entity_number_add_node(ha_number_entity_t* number_new_node)
     number_new_node->next = ha_device->entity_number->number_list;
     ha_device->entity_number->number_list->prev = number_new_node;
     vPortFree(number_new_node->config_data);
+    vPortFree(unique_id);
+    unique_id = NULL;
 }
 
 #endif

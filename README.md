@@ -1,5 +1,5 @@
-# HomeAssistant-C
-HomeAssistant-C 这是一个主要为安信可WiFi 模组开发的HomeAssistant 连接库，使用安信可模组时，只需要简单的修改就能接入HomeAssistant。目前已对Ai-M6x系列模组，Ai-WB2系列模组做了简单的适配，对应的SDK如下：
+# HomeAssistant_MQTT-C
+HomeAssistant_MQTT-C 这是一个主要为安信可 WiFi 模组开发的HomeAssistant 连接库，使用安信可模组时，只需要简单的修改就能接入HomeAssistant。目前已对Ai-M6x系列模组，Ai-WB2系列模组做了简单的适配，对应的SDK如下：
 **Ai-WB2 SDK:**[https://gitee.com/Ai-Thinker-Open/Ai-Thinker-WB2](https://gitee.com/Ai-Thinker-Open/Ai-Thinker-WB2)
 **Ai-M6x SDK:**[https://gitee.com/Ai-Thinker-Open/AiPi-Open-Kits](https://gitee.com/Ai-Thinker-Open/AiPi-Open-Kits)
 
@@ -26,7 +26,7 @@ git clone https://gitee.com/Ai-Thinker-Open/Ai-M6x_HomeAssistant-C.git
 - Ai-M6x SDK 移植方法请参考：[README_Ai-M6x.md](docs/README_Ai-M6x.md)
 
 ### 修改接口
-把[HomeAssistant-C](./HomeAssistant-C/)库源码复制到你的工程当中。
+把[HomeAssistant_MQTT-C](./HomeAssistant-C/)库源码复制到你的工程当中。
 >*我推荐使用已经可以连接WiFi功能的工程，比如（wifi/station），并且能够获取到IP地址*
 
 开启 `homeAssistantPort.h` 当中相对应模组的宏定义，以启用它的MQTT接口，例如开启Ai-M62，而Ai-WB2 关闭：
@@ -173,7 +173,7 @@ static void cb_wifi_event(aiio_input_event_t* event, void* data)
     homeAssistant_device_init(&ha_device, ha_event_cb);
 ```
 ## 启动实体资源
-HomeAssitant-C的实体资源以链表的方式存在，为了节省HomeAssitant-C占用的空间，默认不会开启所有实体的编译（只开启"switch"实体资源），如果想要创建更多实体类型，则需要开启，在[homeAssistantDevConfig.h](HomeAssistant-C/homeAssistantDevConfig.h) 中,选择需要开启的实体,这些实体功能是否有用还取决于该功能是否已经开发完成，可以在本文开头看到已经[支持的实体类型](#ok_entity_type)：
+HomeAssitant-C的实体资源以链表的方式存在，为了节省HomeAssitant_MQTT-C占用的空间，默认不会开启所有实体的编译（只开启"switch"实体资源），如果想要创建更多实体类型，则需要开启，在[homeAssistantDevConfig.h](HomeAssistant-C/homeAssistantDevConfig.h) 中,选择需要开启的实体,这些实体功能是否有用还取决于该功能是否已经开发完成，可以在本文开头看到已经[支持的实体类型](#ok_entity_type)：
 ```
 /**********************  需要开启的实体 *************************/
 //报警控制面板 实体 默认不开启，需要使用就置 1

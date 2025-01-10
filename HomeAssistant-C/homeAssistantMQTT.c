@@ -1161,25 +1161,37 @@ void homeAssisatnt_device_stop(void)
     vTaskDelay(pdMS_TO_TICKS(100));
     homeAssistant_mqtt_port_stop();
 }
-
+/**
+ * @brief 发送设备状态到Home Assistant
+ *
+ * @param status 设备状态，true表示在线，false表示离线
+ */
 void homeAssistant_device_send_status(bool status)
 {
+    // 检查MQTT连接状态
     if (ha_device->mqtt_info.mqtt_connect_status) {
+        // 如果availability_topic为空，则创建一个新的availability_topic
         if (ha_device->availability_topic==NULL) goto   __c_topic;
         else goto   send_status;
     __c_topic:
         ha_device->availability_topic = pvPortMalloc(128);
         memset(ha_device->availability_topic, 0, 128);
+        // 格式化availability_topic
         sprintf(ha_device->availability_topic, "%s/%02x%02x%02x%02x%02x%02x/status", CONFIG_HA_AUTOMATIC_DISCOVERY, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5]);
     send_status:
+        // 如果payload_available为空，则设置为"online"
         if (ha_device->payload_available==NULL)ha_device->payload_available = "online";
+        // 如果payload_not_available为空，则设置为"offline"
         if (ha_device->payload_not_available==NULL)ha_device->payload_not_available = "offline";
+        // 根据设备状态发送相应的payload
         homeAssistant_mqtt_port_public(ha_device->availability_topic, status?ha_device->payload_available:ha_device->payload_not_available, 0, 1);
     }
     else {
+        // 如果MQTT服务器断开连接，则打印错误日志
         HA_LOG_E("MQTT server is disconnect\r\n");
     }
 }
+
 
 void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
 {

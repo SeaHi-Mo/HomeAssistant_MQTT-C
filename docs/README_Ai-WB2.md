@@ -6,14 +6,14 @@
 在正式移植之前，需要以前准备一些条件，本文不会继续介绍这些条件的实现方式，因为它们都有参考：
 - Ai-Thinker-WB2 SDK环境搭建，参考教程：[Ai-WB2系列模组linux开发环境搭建](https://blog.csdn.net/Boantong_/article/details/125604649?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171575296516800222812642%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=171575296516800222812642&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_ecpm_v1~rank_v31_ecpm-3-125604649-null-null.nonecase&utm_term=WB2&spm=1018.2226.3001.4450)
 - 一片Ai-WB2的开发板，或者模组
-- 在SDK当中克隆好了Ai-M6x_HomeAssistant-C 源码
+- 在SDK当中克隆好了HomeAssistant_MQTT-C 源码
 
 >为了确保功能够正确被调用，建议在例程源码目录进行克隆
 
 ##  源码移植
 
 ### 步骤1
-在 **Ai-M6x_HomeAssistant-C**文件夹当中创建名为`bouffalo.mk`的文件，添加以下内容：
+在 **HomeAssistant_MQTT-C**文件夹当中创建名为`bouffalo.mk`的文件，添加以下内容：
 
 ```c
 COMPONENT_ADD_INCLUDEDIRS := ./HomeAssistant-C
@@ -27,11 +27,11 @@ COMPONENT_SRCDIRS := ./HomeAssistant-C
 
 ```
 INCLUDE_COMPONENTS += axk_common tcp_transport http-parser axk_tls axk_mqtt cjson 
-INCLUDE_COMPONENTS += Ai-M6x_HomeAssistant-C
-EXTRA_COMPONENT_DIRS += $(PROJECT_PATH)/Ai-M6x_HomeAssistant-C
+INCLUDE_COMPONENTS += HomeAssistant_MQTT-C
+EXTRA_COMPONENT_DIRS += $(PROJECT_PATH)/HomeAssistant_MQTT-C
 ```
 
->其中 `EXTRA_COMPONENT_DIRS += $(PROJECT_PATH)/Ai-M6x_HomeAssistant-C` 是Ai-M6x_HomeAssistant-C库的实际路径，如果你的Ai-M6x_HomeAssistant-C库不在本例程目录中，则需要修改`$(PROJECT_PATH)`，让编译工具能够找到它。
+>其中 `EXTRA_COMPONENT_DIRS += $(PROJECT_PATH)/Ai-M6x_HomeAssistant-C` 是HomeAssistant_MQTT-C库的实际路径，如果你的HomeAssistant_MQTT-C库不在本例程目录中，则需要修改`$(PROJECT_PATH)`，让编译工具能够找到它。
 
 ## 修改接口
 HomeAssistant-C 的默认接口是Ai-M6x,为了防止编译顺利，强烈建议检查一下接口信息，打开[homeAssistantPort.h](../HomeAssistant-C/homeAssistantPort.h),检查宏定 **#define CONFIG_Ai_WB2** 是否被注释，如果被注释掉，你需要启用它来使用Ai-WB2的MQTT接口，同时把 **#define CONFIG_Ai_M6x** 注释掉：

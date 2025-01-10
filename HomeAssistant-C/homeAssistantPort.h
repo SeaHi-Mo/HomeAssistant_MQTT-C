@@ -14,8 +14,8 @@
 #include "homeAssistantMQTT.h"
 #include "homeAssistantDevConfig.h"
 
-#define CONFIG_Ai_M6x
-// #define CONFIG_Ai_WB2
+// #define CONFIG_Ai_M6x
+#define CONFIG_Ai_WB2
 
 #define HA_LOG_ENABLE
 

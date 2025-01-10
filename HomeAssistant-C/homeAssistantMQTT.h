@@ -26,7 +26,7 @@ typedef enum {
     HA_EVENT_MQTT_DISCONNECT,//服务器断开事件
     HA_EVENT_HOMEASSISTANT_STATUS_ONLINE, //HomeAssisstant 在线事件
     HA_EVENT_HOMEASSISTANT_STATUS_OFFLINE, //HomeAssistant 掉线事件
-#if CONFIG_ENTITY_ENABLE_SWITCH  
+#if CONFIG_ENTITY_ENABLE_SWITCH
     HA_EVENT_MQTT_COMMAND_SWITCH,//服务器下发开关命令事件，当在HA操作开关时，会触发这个事件
 #endif
 #if CONFIG_ENTITY_ENABLE_LIGHT
@@ -37,8 +37,18 @@ typedef enum {
 #if CONFIG_ENTITY_ENABLE_TEXT
     HA_EVENT_MQTT_COMMAND_TEXT_VALUE,  //服务器下发text内容事件
 #endif
-#if CONFIG_ENTITY_ENABLE_NUMBER
-    HA_EVENT_MQTT_COMMAND_NUMBER_VALUE,
+#if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
+    HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_POWER, //服务器下发的空调开关事件
+    HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_MODES, //设置模式
+    HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_TEMP,  //设置温度
+    HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_FAN_MODES,//设置风力  
+#endif
+#if CONFIG_ENTITY_ENABLE_SELECT
+    HA_EVENT_MQTT_COMMAND_SELECT_VALUE,
+#endif
+
+#if CONFIG_ENTITY_ENABLE_BUTTON
+    HA_EVENT_MQTT_COMMAND_BUTTON,
 #endif
 
     HA_EVENT_MQTT_ERROR,
@@ -131,21 +141,21 @@ typedef struct {
 */
 #if CONFIG_ENTITY_ENABLE_LIGHT
 struct light_brightness_t {
-    char* brightness_command_topic;
-    char* brightness_command_template;
-    char* brightness_scale;
-    char* brightness_state_topic;
-    char* brightness_value_template;
-    char brightness;
+    char* brightness_command_topic; //   亮度命令主题
+    char* brightness_command_template; //  亮度命令模板
+    char* brightness_scale; //  亮度比例
+    char* brightness_state_topic; //  亮度状态主题
+    char* brightness_value_template; //  亮度值模板
+    char brightness; //  亮度值
 };
 
 struct light_color_temp_t {
-    char* color_mode_state_topic;
-    char* color_mode_value_template;
-    char* color_temp_command_template;
-    char* color_temp_command_topic;
-    char* color_temp_state_topic;
-    char* color_temp_value_template;
+    char* color_mode_state_topic; //   颜色模式状态主题
+    char* color_mode_value_template; //   颜色模式值模板
+    char* color_temp_command_template; //   颜色温度命令模板
+    char* color_temp_command_topic; //   颜色温度命令主题
+    char* color_temp_state_topic; //  定义一个结构体，用于存储颜色温度相关的信息
+    char* color_temp_value_template; //  定义一个结构体，用于存储颜色温度相关的信息
 };
 
 struct light_effect_t {
@@ -252,7 +262,7 @@ typedef struct {
  * @brief 传感器实体
  *
 */
-#if (CONFIG_ENTITY_ENABLE_SENSOR || CONFIG_ENTITY_ENABLE_NUMBER)
+#if CONFIG_ENTITY_ENABLE_SENSOR
 typedef enum {
     Class_None = 0,
     Class_apparent_power,
@@ -307,8 +317,7 @@ typedef enum {
     Class_weight,
     Class_wind_speed
 }ha_sensor_class_t;
-#endif
-#if CONFIG_ENTITY_ENABLE_SENSOR
+
 typedef  struct homeAssisatnt_entity_sensor {
     char* name;
     char* entity_config_topic;
@@ -469,62 +478,212 @@ typedef struct {
     ha_text_entity_t* command_text;
 }ha_text_list_t;
 #endif
-/**
- * @brief 数字实体
- *
-*/
-#if CONFIG_ENTITY_ENABLE_NUMBER
 
-typedef  struct homeAssisatnt_entity_number {
-    char* name;
-    char* entity_config_topic;
-    char* config_data;
-    char* object_id;
-    char* unique_id;
+#if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
 
+typedef enum {
+    AC_MODES_AUTO = 0,
+    // AC_MODES_OFF,
+    AC_MODES_COOL,
+    AC_MODES_HEAT,
+    AC_MODES_DRY,
+    AC_MODES_FAN_ONLY,
+    AC_MODES_OTHER,
+
+}ac_modes_t;
+
+typedef enum {
+    AC_FAN_MODES_AUTO = 0,
+    // AC_MODES_OFF,
+    AC_FAN_MODES_LOW,
+    AC_FAN_MODES_MEDIUM,
+    AC_FAN_MODES_HIGH,
+}ac_fan_modes_trype_t;
+
+typedef  struct homeAssisatnt_entity_climateHVAC {
+    char* action_template;
+    char* action_topic;
     char* availability_mode;
     char* availability_template;
     char* availability_topic;
+    //监听当前的湿度
+    char* current_humidity_template;
+    char* current_humidity_topic;
+    //监听当前的温度
+    char* current_temperature_template;
+    char* current_temperature_topic;
 
-    char* payload_available;
-    char* payload_not_available;
-    char* payload_reset;
     bool enabled_by_default;
     char* encoding;
-
     char* entity_category;
+    //空调风力控制
+    char* fan_mode_command_template;
+    char* fan_mode_command_topic;
+    char* fan_mode_state_template;
+    char* fan_mode_state_topic;
+    char* fan_modes[4];
+    ac_fan_modes_trype_t fan_modes_type;
+    //初始化温度设定
+    float initial;  //设置初始目标温度。默认值取决于温度单位，为 21° 或 69.8°F。
     char* icon;
+
     char* json_attributes_template;
     char* json_attributes_topic;
 
-    int max;  //默认255
-    int min;  //默认 0
-    char* mode; //关闭数字实体的模式
-    char* pattern;//要设置或接收的数字必须与有效的正则表达式匹配。
-    char* command_template;//接收数字的格式
-    char* command_topic;//接收数字的主题
-    ha_sensor_class_t device_class;
+    float max_humidity; //可设置的最大湿度值
+    float max_temp; //可设置的最大温度值
+    float min_humidity;//可设置的最小湿度值
+    float min_temp; //可设置的最小温度值
+
+    char* mode_command_template;
+    char* mode_command_topic;
+    char* mode_state_template;
+    char* mode_state_topic;
+    char* modes[6];
+    ac_modes_t modes_type;
+
+    char* name;
+    char* object_id;
     bool optimistic;
+    char* payload_available;
+    char* payload_not_available;
+    char* payload_off;
+    char* payload_on;
+
+    char* power_command_template;
+    char* power_command_topic;
+    bool power_state;
+
+    float precision;
+    char* preset_mode_command_template;
+    char* preset_mode_command_topic;
+    char* preset_mode_state_topic;
+    char* preset_mode_value_template;
+    char* preset_modes[7];
+
     int qos;
     bool retain;
-    char* state_topic;//返回发布数字的主题
-    char* unit_of_measurement;
-    char* value_template;//发布数字的格式
-    uint8_t step;
-    char* number_value;   //当前数字字符串内容
-    float number;         //当前的数字
-    struct homeAssisatnt_entity_number* prev;
-    struct homeAssisatnt_entity_number* next;
-}ha_number_entity_t;
+    char* swing_mode_command_template;
+    char* swing_mode_command_topic;
+    char* swing_mode_state_template;
+    char* swing_mode_state_topic;
+    char* swing_modes[10];
+
+    char* target_humidity_command_template;
+    char* target_humidity_command_topic;
+    char* target_humidity_state_topic;
+    char* target_humidity_state_template;
+
+    char* temperature_command_template;
+    char* temperature_command_topic;
+    char* temperature_high_command_template;
+    char* temperature_high_command_topic;
+    char* temperature_high_state_template;
+    char* temperature_high_state_topic;
+    char* temperature_low_command_template;
+    char* temperature_low_command_topic;
+    char* temperature_low_state_template;
+    char* temperature_low_state_topic;
+    char* temperature_state_template;
+    char* temperature_state_topic;
+    char* temperature_unit;
+    float temperature_value;
+    float temp_step;
+    char* unique_id;
+    char* value_template;
+    char* entity_config_topic;
+    char* config_data;
+
+    struct homeAssisatnt_entity_climateHVAC* prev;
+    struct homeAssisatnt_entity_climateHVAC* next;
+}ha_climateHVAC_t;
 
 typedef struct {
     char* entity_type;
-    ha_number_entity_t* number_list;
-    ha_number_entity_t* command_number;
-}ha_number_list_t;
+    ha_climateHVAC_t* climateHVAC_list;
+    ha_climateHVAC_t* command_climateHVAC;
+}ha_climateHVAC_list_t;
 
 #endif
 
+#if CONFIG_ENTITY_ENABLE_SELECT
+
+typedef  struct homeAssisatnt_entity_select {
+    char* availability_topic;
+    char* availability_mode;
+    char* availability_template;
+    char* command_template;//接收文本的格式
+    char* command_topic;//接收文本的主题
+    bool enabled_by_default;
+    char* encoding;
+    char* entity_category;
+    char* icon;
+
+    char* json_attributes_template;
+    char* json_attributes_topic;
+    char* name;
+    char* object_id;
+    bool optimistic;
+
+    char** options;
+    int options_numble;
+    int qos;
+    bool retain;
+
+    char* state_topic;
+    char* unique_id;
+    char* value_template;
+    int option;
+
+    char* entity_config_topic;
+    char* config_data;
+    struct homeAssisatnt_entity_select* prev;
+    struct homeAssisatnt_entity_select* next;
+}ha_select_t;
+
+typedef struct {
+    char* entity_type;
+    ha_select_t* select_list;
+    ha_select_t* command_select;
+}ha_select_list_t;
+#endif
+#if CONFIG_ENTITY_ENABLE_BUTTON
+
+typedef struct homeAssisatnt_entity_button {
+    char* name;                   //实体名称 必须要赋值
+    char* entity_config_topic;    //实体自动发现需要的topic，已经自动赋值，可以不配置
+    char* object_id;              //实体 工程id 可以为NULL
+    char* availability_mode;      //实体上下线的模式 可以为NULL
+    char* availability_template;  //实体上下线的数据格式，建议为NULL，采用默认
+    char* availability_topic;     //实体上下线上报的Topic,建议保持默认
+    char* command_topic;          //命令接收的Topic,需要订阅
+    char* command_template;           //数据格式 
+    char* device_class;           //设备类型，可以留空
+    bool enabled_by_default;         //默认LED的状态
+    char* encoding;               //编码方式
+    char* entity_category;        //实体属性，保持NULL
+    char* icon;                    //图标
+    char* json_attributes_template;//json 数据模板'
+    char* json_attributes_topic;
+    char* optimistic;              //记忆模式
+    char* payload_available;       //在线消息内容 默认"online"
+    char* payload_not_available;   //离线消息内容 默认"offline"
+    char* payload_press;           //点击事件
+    int qos;                      //消息服务质量
+    bool retain;                       //是否保留该信息     
+    char* unique_id;                // 唯一的识别码，这个必须配置 
+    char* config_data;      //开关的自动发现的json数据
+    struct homeAssisatnt_entity_button* prev;
+    struct homeAssisatnt_entity_button* next;
+}ha_btn_entity_t;
+
+typedef struct {
+    char* entity_type;
+    ha_btn_entity_t* button_list;
+    ha_btn_entity_t* command_button;
+}ha_btn_list_t;
+
+#endif
 /**
  * @brief  设备信息
  *
@@ -561,8 +720,16 @@ typedef struct homeAssisatnt_device {
     ha_text_list_t* entity_text;
 #endif
 
-#if CONFIG_ENTITY_ENABLE_NUMBER
-    ha_number_list_t* entity_number;
+
+#if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
+    ha_climateHVAC_list_t* entity_climateHVAC;
+#endif
+#if CONFIG_ENTITY_ENABLE_SELECT
+    ha_select_list_t* entity_select;
+#endif
+
+#if CONFIG_ENTITY_ENABLE_BUTTON
+    ha_btn_list_t* entity_button;
 #endif
 
     ha_mqtt_info_t mqtt_info;
@@ -612,7 +779,7 @@ void homeAssistant_device_send_status(bool status);
 */
 int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state);
 /**
- * @brief homeAssistant_fine_entity
+ * @brief homeAssisatant_fine_entity
  *          通过unique id 查找实体，这个功能必须自定义unique_id 如果使用随机的unique_id 则会无法查找
  * @param entity_type 实体类型
  * @param unique_id 实体的 unique id
@@ -620,5 +787,10 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
 */
 void* homeAssistant_fine_entity(char* entity_type, const char* unique_id);
 
+/**
+ * @brief 更新所有实体信息
+ *
+*/
+void update_all_entity_to_homeassistant(void);
 #endif
 

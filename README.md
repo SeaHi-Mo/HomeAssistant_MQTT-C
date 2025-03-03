@@ -20,7 +20,7 @@ HomeAssistant_MQTT-C 这是一个主要为安信可 WiFi 模组开发的HomeAssi
 |sensor|传感器|:white_check_mark:|
 |binary sensor|二进制传感器|:white_check_mark:|
 |Light|灯|:white_check_mark:|
-|Number|数字|:white_check_markv:|
+|Number|数字|:white_check_mark:|
 |climateHVAC|空调/温控器|:white_check_mark:|
 |Select|选择器/下拉选择框|:white_check_mark:|
 |Button|按钮|:white_check_mark:|

@@ -1,16 +1,17 @@
 <div style="text-align: center;">
 
 # HomeAssistant_MQTT-C  
-*HomeAssistant 的MQTT链接库*
 
 </div>
 
+![version](https://img.shields.io/badge/Version-0.0.1-blue)
 
 ## 简介
 
 HomeAssistant_MQTT-C 这是一个主要为安信可 WiFi 模组开发的HomeAssistant 连接库，使用安信可模组时，只需要简单的修改就能接入HomeAssistant。目前已对Ai-M6x系列模组，Ai-WB2系列模组做了简单的适配，对应的SDK如下：
-**Ai-WB2 SDK:**[https://gitee.com/Ai-Thinker-Open/Ai-Thinker-WB2](https://gitee.com/Ai-Thinker-Open/Ai-Thinker-WB2)
-**Ai-M6x SDK:**[https://gitee.com/Ai-Thinker-Open/AiPi-Open-Kits](https://gitee.com/Ai-Thinker-Open/AiPi-Open-Kits)
+
+- **Ai-WB2 SDK:**[https://gitee.com/Ai-Thinker-Open/Ai-Thinker-WB2](https://gitee.com/Ai-Thinker-Open/Ai-Thinker-WB2)
+- **Ai-M6x SDK:**[https://gitee.com/Ai-Thinker-Open/AiPi-Open-Kits](https://gitee.com/Ai-Thinker-Open/AiPi-Open-Kits)
 
 **master 分支已开发完成的实体：**<span id="ok_entity_type"></span>
 |实体类型|实体名称|状态|
@@ -19,11 +20,10 @@ HomeAssistant_MQTT-C 这是一个主要为安信可 WiFi 模组开发的HomeAssi
 |sensor|传感器|:white_check_mark:|
 |binary sensor|二进制传感器|:white_check_mark:|
 |Light|灯|:white_check_mark:|
-|Text|文本|:white_check_mark:|
-|Number|数字|:white_check_mark:|
-|climateHVAC|温控器/空调|:white_check_mark:|
-|select|选择器/下拉选择框|:white_check_mark:|
-|button|按钮|:white_check_mark:|
+|Number|数字|:white_check_markv:|
+|climateHVAC|空调/温控器|:white_check_mark:|
+|Select|选择器/下拉选择框|:white_check_mark:|
+|Button|按钮|:white_check_mark:|
 
 ## 基本使用方法
 

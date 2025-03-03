@@ -109,6 +109,36 @@ homeAssistant_device_add_entity(CONFIG_HA_ENTITY_SWITCH, &sw);
 ```
 >其中，`CONFIG_HA_ENTITY_SWITCH`为实体类型，`&sw`为实体信息结构体指针。
 
+#### Switch 实体参数
+
+|参数名|权限|类型|描述|
+|:----|:----|:----|:----|
+|name|必选|char*|实体名称|
+|entity_config_topic|可选|char*|实体自动发现需要的topic，已经自动赋值，可以不配置|
+|object_id|可选|char*|实体 工程id 可以为NULL|
+|availability_mode|可选|char*|实体上下线的模式 可以为NULL|
+|availability_template|可选|char*|实体上下线的数据格式，建议为NULL，采用默认|
+|availability_topic|可选|char*|实体上下线上报的Topic,建议保持默认|
+|command_topic|可选|char*|命令接收的Topic,需要订阅|
+|state_topic|可选|char*|上报给HA的数据的Topic，默认已配置|
+|device_class|可选|char*|设备类型，可以留空|
+|enabled_by_default|可选|bool|默认LED的状态|
+|encoding|可选|char*|编码方式|
+|entity_category|可选|char*|实体属性，保持NULL|
+|icon|可选|char*|图标|
+|json_attributes_template|可选|char*|json 数据模板|
+|optimistic|可选|char*|记忆模式|
+|payload_available|可选|char*|在线消息内容 默认"online"|
+|payload_not_available|可选|char*|离线消息内容 默认"offline"|
+|payload_off|可选|char*|开关状态内容，默认"ON"|
+|payload_on|可选|char*|开关状态内容，默认"OFF"|
+|qos|可选|int|消息服务质量|
+|retain|可选|bool|是否保留该信息|
+|state_off|可选|char*|状态 关|
+|state_on|可选|char*|状态 开|
+|unique_id|必选|char*|唯一的识别码，这个必须配置|
+|value_template|可选|char*|数据格式|
+
 ### 步骤3.接收控制指令
 HomeAssistant_MQTT-C 中，Switch实体的控制指令，通过`ha_event_cb`回调函数接收，会触发`HA_EVENT_MQTT_COMMAND_SWITCH`事件，可以使用 `power_state` 判断开关指令:`0`为关，`1`为开。<br>
 示例如下：
@@ -138,9 +168,67 @@ HomeAssistant_MQTT-C 中，Switch实体的状态，通过`homeAssistant_device_e
 
 ## Sensor 
 
+Sensor 实体是HomeAssistant中的一种设备类型，用于表示可以测量某种状态的设备，例如温度、湿度、光照强度等。
+
 ### 步骤1.开启资源
+任何实体，在使用之前都需要开启对应的资源，Sensor资源,在HomeAssistant_MQTT-C 中，需要通过以下方式开启Sensor资源：
+- 1. 打开[homeAssistantDevConfig.h](../HomeAssistant-C/homeAssistantDevConfig.h)
+- 2. 设置`#define MQTT_SENSOR_ENABLE`为`1`<br>
+如：<br>![alt text](./IMG/sensor_1.png)
 
 ### 步骤2.创建实体
+> :warning:**前提条件:**<br>
+> - 1.创建实体的前提条件是已经开启了对应的资源，例如Sensor实体，需要开启Sensor资源。<br>
+> - 2.必须设备上线之前创建好实体，否则设备上线后，HomeAssistant无法识别实体。
+
+Sensor实体，在HomeAssistant_MQTT-C 中，需要通过以下方式创建实体：
+- 1. 创建 Sensor 实体信息结构体，并初始化。必填参数有`name`、`unique_id`其他参数可选。<br>
+  ```c
+  static ha_sensor_entity_t sensor = {
+                .name = "温度",
+                .unique_id = "sensor_1",
+            };
+  ```
+- 2. 调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
+  ```c
+  static ha_sensor_entity_t sensor = {
+                .name = "温度",
+                .unique_id = "sensor_1",
+            };
+  homeAssistant_device_add_entity(CONFIG_HA_ENTITY_SENSOR, &sensor);
+  ```
+  >其中，`CONFIG_HA_ENTITY_SENSOR`为实体类型，`&sensor`为实体信息结构体指针。
+#### Sensor 实体参数
+|参数名|权限|类型|描述|
+|:----|:----|:----|:----|
+|name|必选|char*|实体名称|
+|entity_config_topic|可选|char*|配置主题|
+|config_data|可选|char*|配置数据|
+|object_id|可选|char*|对象ID|
+|unique_id|必选|char*|唯一的识别码，这个必须配置|
+|availability_mode|可选|char*|可用性模式|
+|availability_template|可选|char*|可用性模板|
+|availability_topic|可选|char*|可用性主题|
+|device_class|可选|ha_sensor_class_t|设备类|
+|payload_available|可选|char*|可用负载|
+|payload_not_available|可选|char*|不可用负载|
+|suggested_display_precision|可选|unsigned short|建议显示精度|
+|enabled_by_default|可选|bool|默认启用|
+|entity_category|可选|char*|实体类别|
+|icon|可选|char*|图标|
+|json_attributes_template|可选|char*|JSON属性模板|
+|json_attributes_topic|可选|char*|JSON属性主题|
+|last_reset_value_template|可选|char*|最后重置值模板|
+|qos|可选|unsigned short|服务质量|
+|retain|可选|bool|保留|
+|state_class|可选|char*|状态类|
+|state_topic|可选|char*|状态主题|
+|unit_of_measurement|可选|char*|单位|
+|value_template|可选|char*|值模板|
+|expire_after|可选|unsigned short|过期时间|
+|force_update|可选|bool|强制更新|
+|sensor_data|可选|void*|传感器数据|
+
 
 ### 步骤3.发送传感器状态
 

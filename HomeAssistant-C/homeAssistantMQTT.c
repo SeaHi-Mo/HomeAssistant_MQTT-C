@@ -177,7 +177,7 @@ static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON*
     }
     cJSON* root = cJSON_CreateObject();
     if (light_entity->name!=NULL)cJSON_AddStringToObject(root, "name", light_entity->name);
-    if (light_entity->device_class!=NULL)cJSON_AddStringToObject(root, "device_class", light_entity->device_class);
+
     if (unique_id==NULL&&light_entity->unique_id!=NULL)
     {
         unique_id = pvPortMalloc(32);
@@ -229,6 +229,19 @@ static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON*
     if (light_entity->rgb.rgb_command_topic!=NULL) cJSON_AddStringToObject(root, "rgb_command_topic", light_entity->rgb.rgb_command_topic);
     if (light_entity->rgb.rgb_state_topic != NULL)cJSON_AddStringToObject(root, "rgb_state_topic", light_entity->rgb.rgb_state_topic);
     if (light_entity->rgb.rgb_value_template!=NULL)cJSON_AddStringToObject(root, "rgb_value_template", light_entity->rgb.rgb_value_template);
+    //hs
+    if (light_entity->hs.hs_command_template!=NULL)cJSON_AddStringToObject(root, "hs_command_template", light_entity->hs.hs_command_template);
+    if (light_entity->hs.hs_command_topic!=NULL) cJSON_AddStringToObject(root, "hs_command_topic", light_entity->hs.hs_command_topic);
+    if (light_entity->hs.hs_state_topic!=NULL) cJSON_AddStringToObject(root, "hs_state_topic", light_entity->hs.hs_state_topic);
+    if (light_entity->hs.hs_value_template!=NULL)cJSON_AddStringToObject(root, "hs_value_template", light_entity->hs.hs_value_template);
+    //rgbww
+    if (light_entity->rgbww.rgbww_command_template!=NULL)cJSON_AddStringToObject(root, "rgbww_command_template", light_entity->rgbww.rgbww_command_template);
+    if (light_entity->rgbww.rgbww_command_topic!=NULL) cJSON_AddStringToObject(root, "rgbww_command_topic", light_entity->rgbww.rgbww_command_topic);
+    if (light_entity->rgbww.rgbww_state_topic!=NULL) cJSON_AddStringToObject(root, "rgbww_state_topic", light_entity->rgbww.rgbww_state_topic);
+    if (light_entity->rgbww.rgbww_value_template!=NULL)cJSON_AddStringToObject(root, "rgbww_value_template", light_entity->rgbww.rgbww_value_template);
+    //white
+    if (light_entity->white.white_command_topic!=NULL) cJSON_AddStringToObject(root, "white_command_topic", light_entity->white.white_command_topic);
+    if (light_entity->white.white_scale!=NULL)cJSON_AddStringToObject(root, "white_scale", light_entity->white.white_scale);
 
     if (light_entity->qos) cJSON_AddNumberToObject(root, "qos", light_entity->qos);
     if (light_entity->retain) cJSON_AddTrueToObject(root, "retain");
@@ -613,6 +626,132 @@ static void  entity_text_add_node(ha_text_entity_t* text_new_node)
     vPortFree(text_new_node->config_data);
 }
 #endif
+
+#if CONFIG_ENTITY_ENABLE_NUMBER
+/**
+ * @brief 创建number实体的config 数据
+ *
+ * @param number_entity
+ * @param device_json
+*/
+static void homeAssistant_create_number_data(ha_number_entity_t* number_entity, cJSON* device_json)
+{
+    if (number_entity==NULL) {
+        HA_LOG_E("entity light buff is NULL\r\n");
+        return;
+    }
+
+    cJSON* root = cJSON_CreateObject();
+    if (number_entity->name!=NULL)cJSON_AddStringToObject(root, "name", number_entity->name);
+    if (number_entity->unique_id!=NULL)
+    {
+
+        if (unique_id==NULL) unique_id = pvPortMalloc(64);
+        memset(unique_id, 0, 64);
+        sprintf(unique_id, "%s-%02x%2x", number_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        cJSON_AddStringToObject(root, "unique_id", unique_id);
+    }
+    else HA_LOG_E("unique id is null for entity:%s \r\n", number_entity->name);
+
+    if (number_entity->object_id!=NULL)cJSON_AddStringToObject(root, "object_id", number_entity->object_id);
+    if (number_entity->icon!=NULL)cJSON_AddStringToObject(root, "icon", number_entity->icon);
+    if (number_entity->availability_template!=NULL)cJSON_AddStringToObject(root, "availability_template", number_entity->availability_template);
+
+    if (number_entity->availability_topic!=NULL)cJSON_AddStringToObject(root, "availability_topic", number_entity->availability_topic);
+    else cJSON_AddStringToObject(root, "availability_topic", ha_device->availability_topic);
+    if (number_entity->payload_available!=NULL)cJSON_AddStringToObject(root, "payload_available", number_entity->payload_available);
+    else  cJSON_AddStringToObject(root, "payload_available", ha_device->payload_available);
+    if (number_entity->payload_not_available!=NULL)cJSON_AddStringToObject(root, "payload_not_available", number_entity->payload_not_available);
+    else cJSON_AddStringToObject(root, "payload_not_available", ha_device->payload_not_available);
+
+    if (number_entity->json_attributes_template!=NULL) cJSON_AddStringToObject(root, "json_attributes_template", number_entity->json_attributes_template);
+    if (number_entity->json_attributes_topic!=NULL)cJSON_AddStringToObject(root, "json_attributes_topic", number_entity->json_attributes_topic);
+    if (number_entity->enabled_by_default)cJSON_AddTrueToObject(root, "enabled_by_default");
+    if (number_entity->entity_category!=NULL)cJSON_AddStringToObject(root, "entity_category", number_entity->entity_category);
+    if (number_entity->encoding!=NULL)cJSON_AddStringToObject(root, "encoding", number_entity->encoding);
+
+    if (number_entity->unit_of_measurement!=NULL)cJSON_AddStringToObject(root, "unit_of_measurement", number_entity->unit_of_measurement);
+    if (number_entity->optimistic)cJSON_AddTrueToObject(root, "optimistic");
+
+    if (number_entity->step)cJSON_AddNumberToObject(root, "step", 1.0/(10.0*number_entity->step));
+    if (number_entity->max)cJSON_AddNumberToObject(root, "max", number_entity->max);
+    if (number_entity->min) cJSON_AddNumberToObject(root, "min", number_entity->min);
+    if (number_entity->mode!=NULL)cJSON_AddStringToObject(root, "mode", number_entity->mode);
+    else cJSON_AddStringToObject(root, "mode", "text");
+    if (number_entity->command_template!=NULL)cJSON_AddStringToObject(root, "command_template", number_entity->command_template);
+    if (number_entity->command_topic==NULL)
+    {
+        number_entity->command_topic = pvPortMalloc(128);
+        memset(number_entity->command_topic, 0, 128);
+        sprintf(number_entity->command_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/set", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
+    }
+    cJSON_AddStringToObject(root, "command_topic", number_entity->command_topic);
+
+    if (number_entity->state_topic==NULL) {
+        number_entity->state_topic = pvPortMalloc(128);
+        memset(number_entity->state_topic, 0, 128);
+        sprintf(number_entity->state_topic, "%s/%02x%02x%02x%02x%02x%02x/%s/state", ha_device->name, STA_MAC[0], STA_MAC[1], STA_MAC[2], STA_MAC[3], STA_MAC[4], STA_MAC[5], unique_id);
+    }
+    cJSON_AddStringToObject(root, "state_topic", number_entity->state_topic);
+
+    if (number_entity->value_template!=NULL)cJSON_AddStringToObject(root, "value_template", number_entity->value_template);
+    if (number_entity->pattern!=NULL)cJSON_AddStringToObject(root, "pattern", number_entity->pattern);
+
+    if (number_entity->qos) cJSON_AddNumberToObject(root, "qos", number_entity->qos);
+    if (number_entity->retain) cJSON_AddTrueToObject(root, "retain");
+
+    //添加设备信息
+    if (device_json!=NULL)cJSON_AddItemToObject(root, "device", device_json);
+    number_entity->config_data = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+}
+
+static void  entity_number_add_node(ha_number_entity_t* number_new_node)
+{
+
+    ha_number_entity_t* number_list_handle = ha_device->entity_number->number_list->prev;
+    //开始创建新的实体数据
+    homeAssistant_create_number_data(number_new_node, homeAssistant_device_create());
+    if (number_new_node->entity_config_topic==NULL) {
+        number_new_node->entity_config_topic = pvPortMalloc(128);
+        memset(number_new_node->entity_config_topic, 0, 128);
+        sprintf(number_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_TEXT, unique_id);
+    }
+    if (ha_device->mqtt_info.mqtt_connect_status) {
+        homeAssistant_mqtt_port_public(number_new_node->entity_config_topic, number_new_node->config_data, 1, 1);
+        if (number_new_node->command_topic!=NULL)homeAssistant_mqtt_port_subscribe(number_new_node->command_topic, 1);
+        if (number_new_node->availability_topic!=NULL)
+            homeAssistant_mqtt_port_public(number_new_node->availability_topic, number_new_node->payload_available, 0, 0);
+    }
+    else {
+        HA_LOG_E("MQTT server is diconnenct\r\n");
+    }
+    //创建时检查默认内容是否存在
+    if (number_new_node->number_value!=NULL) {
+        //缓存内容
+        char* value_buff = pvPortMalloc(256);
+        memset(value_buff, 0, 256);
+        sprintf(value_buff, "%s", number_new_node->number_value);
+        memset(number_new_node->number_value, 0, strlen(number_new_node->number_value));
+        number_new_node->number_value = NULL;
+        //重新申请空间
+        number_new_node->number_value = pvPortMalloc(256);
+        memset(number_new_node->number_value, 0, 256);
+        sprintf(number_new_node->number_value, "%s", value_buff);
+        vPortFree(value_buff);
+    }
+    //插入节点
+    number_list_handle->next = number_new_node;
+    number_new_node->prev = number_list_handle;
+    number_new_node->next = ha_device->entity_number->number_list;
+    ha_device->entity_number->number_list->prev = number_new_node;
+    vPortFree(number_new_node->config_data);
+    vPortFree(unique_id);
+    unique_id = NULL;
+}
+
+#endif
+
 /**
  * @brief 空调设备
  *
@@ -1230,7 +1369,39 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
             text_cur = text_cur->next;
     }
 #endif
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    ha_number_entity_t* number_cur = ha_device->entity_number->number_list->next;
 
+    while (number_cur!=ha_device->entity_number->number_list) {
+        if (!strncmp(topic, number_cur->command_topic, topic_len)) {
+            if (number_cur->number_value==NULL) {
+                number_cur->number_value = pvPortMalloc(16);
+            }
+            memset(number_cur->number_value, 0, 16);
+            strncpy(number_cur->number_value, data, data_len);
+            if (number_cur->step) {
+                char* number_str = number_cur->number_value;
+                while (*number_str!='\0') {
+                    if (*number_str=='.') {
+                        number_str += number_cur->step;
+                        number_str += 1;
+                        *number_str = '\0';
+                        break;
+                    }
+                    number_str++;
+                }
+            }
+            number_cur->number = (double)(number_cur->step?atof(number_cur->number_value):atoi(number_cur->number_value));
+
+            event = HA_EVENT_MQTT_COMMAND_NUMBER_VALUE;
+            ha_device->entity_number->command_number = number_cur;
+            return event;
+        }
+        if (number_cur->next == ha_device->entity_number->number_list)break;
+        else
+            number_cur = number_cur->next;
+    }
+#endif
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     ha_climateHVAC_t* climateHVAC_cur = ha_device->entity_climateHVAC->climateHVAC_list->next;
     while (climateHVAC_cur!=ha_device->entity_climateHVAC->climateHVAC_list)
@@ -1351,7 +1522,7 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
         if (climateHVAC_cur->next == ha_device->entity_climateHVAC->climateHVAC_list)break;
         else
             climateHVAC_cur = climateHVAC_cur->next;
-    }
+}
 
 #endif
 
@@ -1393,7 +1564,7 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
 #endif
 
     return event;
-}
+    }
 
 //单独更新所有实体的配置，当homeAssistant重启时更新实体上线
 void update_all_entity_to_homeassistant(void)
@@ -1507,7 +1678,26 @@ void update_all_entity_to_homeassistant(void)
     }
 
 #endif
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    ha_number_entity_t* number_cur = ha_device->entity_number->number_list->next;
+    if (number_cur!=ha_device->entity_number->number_list) {
+        while (number_cur!=ha_device->entity_number->number_list) {
+            homeAssistant_create_number_data(number_cur, homeAssistant_device_create());
+            homeAssistant_mqtt_port_public(number_cur->entity_config_topic, number_cur->config_data, 0, 0);
+            vPortFree(number_cur->config_data);
+            //
+            if (number_cur->availability_topic!=NULL)
+                ret = homeAssistant_mqtt_port_public(number_cur->availability_topic, number_cur->payload_available, 0, 1);
+            else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 1);
+            //更新实体状态
+            if (number_cur->number_value!=NULL) {
+                homeAssistant_device_send_entity_state(ha_device->entity_number->entity_type, number_cur, 0);
+            }
+            number_cur = number_cur->next;
+        }
+    }
 
+#endif
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     ha_climateHVAC_t* climateHVAC_cur = ha_device->entity_climateHVAC->climateHVAC_list->next;
     if (climateHVAC_cur!=ha_device->entity_climateHVAC->climateHVAC_list) {
@@ -1688,7 +1878,13 @@ void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(h
     ha_device->entity_text->text_list->prev = ha_device->entity_text->text_list;
     ha_device->entity_text->text_list->next = ha_device->entity_text->text_list;
 #endif
-
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    ha_device->entity_number = pvPortMalloc(sizeof(ha_number_list_t));
+    ha_device->entity_number->entity_type = CONFIG_HA_ENTITY_NUMBER;
+    ha_device->entity_number->number_list = pvPortMalloc(sizeof(ha_number_entity_t));
+    ha_device->entity_number->number_list->prev = ha_device->entity_number->number_list;
+    ha_device->entity_number->number_list->next = ha_device->entity_number->number_list;
+#endif
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     ha_device->entity_climateHVAC = pvPortMalloc(sizeof(ha_climateHVAC_list_t));
     ha_device->entity_climateHVAC->entity_type = CONFIG_HA_ENTITY_CLIMATE_HVAC;
@@ -1797,7 +1993,13 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
         entity_text_add_node(text_node);
     }
 #endif
-
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_NUMBER)) {
+        HA_LOG_I("HomeAssistant add number entity\r\n");
+        ha_number_entity_t* number_node = (ha_number_entity_t*)ha_entity_list;
+        entity_number_add_node(number_node);
+    }
+#endif
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_CLIMATE_HVAC)) {
         HA_LOG_I("HomeAssistant add text entity\r\n");
@@ -1890,7 +2092,19 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
         else HA_LOG_E("text value is null\r\n");
     }
 #endif
-
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_NUMBER)) {
+        ha_number_entity_t* number_node = (ha_number_entity_t*)ha_entity_list;
+        if (number_node->number)
+            if (number_node->number_value==NULL)number_node->number_value = pvPortMalloc(16);
+        memset(number_node->number_value, 0, 16);
+        sprintf(number_node->number_value, number_node->step==1?"%.0f":"%f", number_node->number);
+        if (number_node->number_value!=NULL&& number_node->state_topic!=NULL) {
+            ret_id = homeAssistant_mqtt_port_public(number_node->state_topic, number_node->number_value, 0, 1);
+        }
+        else HA_LOG_E("number value is null\r\n");
+    }
+#endif
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_CLIMATE_HVAC)) {
         ha_climateHVAC_t* climateHVAC_node = (ha_climateHVAC_t*)ha_entity_list;
@@ -1911,7 +2125,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
                 ret_id = homeAssistant_mqtt_port_public(climateHVAC_node->mode_state_topic, "off", 0, 1);
             }
         }
-    }
+}
 #endif
 
 #if CONFIG_ENTITY_ENABLE_SELECT
@@ -1924,7 +2138,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
     }
 #endif
     return ret_id;
-}
+    }
 
 void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
 {
@@ -1994,7 +2208,15 @@ void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
         }
     }
 #endif
-
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_NUMBER)) {
+        ha_number_entity_t* number_cur = ha_device->entity_number->number_list->next;
+        while (number_cur!=ha_device->entity_number->number_list) {
+            if (!strncmp(number_cur->unique_id, unique_id, strlen(unique_id))) return number_cur;
+            number_cur = number_cur->next;
+        }
+    }
+#endif
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_CLIMATE_HVAC)) {
         ha_climateHVAC_t* climateHVAC_cur = ha_device->entity_climateHVAC->climateHVAC_list->next;

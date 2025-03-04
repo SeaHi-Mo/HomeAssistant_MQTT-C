@@ -37,6 +37,10 @@ typedef enum {
 #if CONFIG_ENTITY_ENABLE_TEXT
     HA_EVENT_MQTT_COMMAND_TEXT_VALUE,  //服务器下发text内容事件
 #endif
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    HA_EVENT_MQTT_COMMAND_NUMBER_VALUE,
+#endif
+
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_POWER, //服务器下发的空调开关事件
     HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_MODES, //设置模式
@@ -171,6 +175,8 @@ struct light_hs_t {
     char* hs_command_topic;
     char* hs_state_topic;
     char* hs_value_template;
+    unsigned short int hue;
+    unsigned short int saturation;
 };
 
 struct light_rgb_t {
@@ -178,9 +184,9 @@ struct light_rgb_t {
     char* rgb_command_topic;
     char* rgb_state_topic;
     char* rgb_value_template;
-    char red;
-    char green;
-    char blue;
+    unsigned char  red;
+    unsigned char green;
+    unsigned char blue;
 };
 
 struct light_rgbw_t {
@@ -188,6 +194,10 @@ struct light_rgbw_t {
     char* rgbw_command_topic;
     char* rgbw_state_topic;
     char* rgbw_value_template;
+    unsigned char  red;
+    unsigned char green;
+    unsigned char blue;
+    unsigned char white;
 };
 
 struct light_rgbww_t {
@@ -195,6 +205,11 @@ struct light_rgbww_t {
     char* rgbww_command_topic;
     char* rgbww_state_topic;
     char* rgbww_value_template;
+    unsigned char  red;
+    unsigned char green;
+    unsigned char blue;
+    unsigned char white1;
+    unsigned char white2;
 };
 
 struct light_white_t {
@@ -219,7 +234,6 @@ typedef  struct homeAssisatnt_entity_light {
     char* availability_topic;
     char* command_topic;
     char* state_topic;
-    char* device_class;
     bool enabled_by_default;
     char* encoding;
     char* entity_category;
@@ -238,7 +252,7 @@ typedef  struct homeAssisatnt_entity_light {
     struct light_hs_t hs;
     struct light_rgb_t rgb;
     struct light_rgbw_t rgbw;
-    struct light_rgbww_t rbgww;
+    struct light_rgbww_t rgbww;
     struct light_white_t white;
     struct light_xy_t xy;
     bool retain;
@@ -258,11 +272,8 @@ typedef struct {
 }ha_lhlist_t;
 #endif
 
-/**
- * @brief 传感器实体
- *
-*/
-#if CONFIG_ENTITY_ENABLE_SENSOR
+
+#if ((CONFIG_ENTITY_ENABLE_SENSOR) || (CONFIG_ENTITY_ENABLE_NUMBER))
 typedef enum {
     Class_None = 0,
     Class_apparent_power,
@@ -319,7 +330,12 @@ typedef enum {
     Class_weight,
     Class_wind_speed
 }ha_sensor_class_t;
-
+#endif
+/**
+ * @brief 传感器实体
+ *
+*/
+#if CONFIG_ENTITY_ENABLE_SENSOR
 typedef  struct homeAssisatnt_entity_sensor {
     char* name;
     char* entity_config_topic;
@@ -357,8 +373,8 @@ typedef struct {
     char* entity_type;
     ha_sensor_entity_t* sensor_list;
 }ha_sensorlist_t;
-
 #endif
+
 /**
  * @brief 二进制传感器实体
  *
@@ -432,11 +448,13 @@ typedef struct {
     ha_Bsensor_entity_t* binary_sensor_list;
 }ha_binary_sensorlist_t;
 #endif
+
 /**
  * @brief Text 文本实体
  *
 */
 #if CONFIG_ENTITY_ENABLE_TEXT
+
 typedef  struct homeAssisatnt_entity_text {
     char* name;
     char* entity_config_topic;
@@ -481,6 +499,57 @@ typedef struct {
 }ha_text_list_t;
 #endif
 
+#if CONFIG_ENTITY_ENABLE_NUMBER
+
+typedef  struct homeAssisatnt_entity_number {
+    char* name;
+    char* entity_config_topic;
+    char* config_data;
+    char* object_id;
+    char* unique_id;
+
+    char* availability_mode;
+    char* availability_template;
+    char* availability_topic;
+
+    char* payload_available;
+    char* payload_not_available;
+    char* payload_reset;
+    bool enabled_by_default;
+    char* encoding;
+
+    char* entity_category;
+    char* icon;
+    char* json_attributes_template;
+    char* json_attributes_topic;
+
+    int max;  //默认255
+    int min;  //默认 0
+    char* mode; //关闭数字实体的模式
+    char* pattern;//要设置或接收的数字必须与有效的正则表达式匹配。
+    char* command_template;//接收数字的格式
+    char* command_topic;//接收数字的主题
+    ha_sensor_class_t device_class;
+    bool optimistic;
+    int qos;
+    bool retain;
+    char* state_topic;//返回发布数字的主题
+    char* unit_of_measurement;
+    char* value_template;//发布数字的格式
+    uint8_t step;
+    char* number_value;   //当前数字字符串内容
+    float number;         //当前的数字
+    struct homeAssisatnt_entity_number* prev;
+    struct homeAssisatnt_entity_number* next;
+}ha_number_entity_t;
+
+typedef struct {
+    char* entity_type;
+    ha_number_entity_t* number_list;
+    ha_number_entity_t* command_number;
+}ha_number_list_t;
+
+#endif
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
 
 typedef enum {
@@ -722,6 +791,9 @@ typedef struct homeAssisatnt_device {
     ha_text_list_t* entity_text;
 #endif
 
+#if CONFIG_ENTITY_ENABLE_NUMBER
+    ha_number_list_t* entity_number;
+#endif
 
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     ha_climateHVAC_list_t* entity_climateHVAC;

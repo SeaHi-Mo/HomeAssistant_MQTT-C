@@ -267,8 +267,10 @@ typedef enum {
     Class_None = 0,
     Class_apparent_power,
     Class_aqi,
+    Clase_area,
     Class_atmospheric_pressure,
     Class_battery,
+    Class_blood_glucose_concentration,
     Class_carbon_dioxide,
     Class_carbon_monoxide,
     Class_current,
@@ -624,7 +626,7 @@ typedef  struct homeAssisatnt_entity_select {
     char* name;
     char* object_id;
     bool optimistic;
-
+    char* platform;
     char** options;
     int options_numble;
     int qos;

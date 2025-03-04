@@ -77,15 +77,6 @@ static void homeAssistant_create_switch_data(ha_sw_entity_t* switch_entity, cJSO
     cJSON* root = cJSON_CreateObject();
     if (switch_entity->name!=NULL)cJSON_AddStringToObject(root, "name", switch_entity->name);
     if (switch_entity->device_class!=NULL)cJSON_AddStringToObject(root, "device_class", switch_entity->device_class);
-    // if (switch_entity->unique_id!=NULL) {
-    //     char* unique_id = pvPortMalloc(5);
-    //     memset(unique_id, 0, 5);
-    //     sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
-    //     switch_entity->unique_id = strcat(switch_entity->unique_id, unique_id);
-    //     cJSON_AddStringToObject(root, "unique_id", switch_entity->unique_id);
-    //     vPortFree(unique_id);
-    // }
-    // else HA_LOG_E("unique id is null for entity:%s \r\n ", switch_entity->name);
 
     if (unique_id==NULL&&switch_entity->unique_id!=NULL)
     {
@@ -122,6 +113,7 @@ static void homeAssistant_create_switch_data(ha_sw_entity_t* switch_entity, cJSO
     else cJSON_AddStringToObject(root, "payload_available", ha_device->payload_available);
     if (switch_entity->payload_not_available!=NULL)cJSON_AddStringToObject(root, "payload_not_available", switch_entity->payload_not_available);
     else cJSON_AddStringToObject(root, "payload_not_available", ha_device->payload_not_available);
+    if (switch_entity->device_class!=NULL) cJSON_AddStringToObject(root, "device_class", switch_entity->device_class);
     if (switch_entity->qos) cJSON_AddNumberToObject(root, "qos", switch_entity->qos);
     if (switch_entity->retain) cJSON_AddTrueToObject(root, "retain");
     if (device_json!=NULL)cJSON_AddItemToObject(root, "device", device_json);
@@ -313,13 +305,14 @@ static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char
  *
 */
 #if CONFIG_ENTITY_ENABLE_SENSOR
-static char* sensor_class_type[] = { "None","apparent_power","aqi","atmospheric_pressure","battery",\
+static char* sensor_class_type[] = { "None","apparent_power","aqi","area","atmospheric_pressure","battery","blood_glucose_concentration",\
 "carbon_dioxide","carbon_monoxide","current","data_rate","data_size","date","distance","duration",\
 "energy","energy_storage","enum","frequency","gas","humidity","illuminance","irradiance","moisture",\
 "monetary","nitrogen_dioxide","nitrogen_monoxide","nitrous_oxide","ozone","ph","pm1","pm25","pm10",\
 "power_factor","power","precipitation","precipitation_intensity","pressure","reactive_power","signal_strength",\
 "sound_pressure","speed","sulphur_dioxide","temperature","timestamp","volatile_organic_compounds","volatile_organic_compounds_parts",\
-"voltage","volume","volume_flow_rate","volume_storage","water","weight","wind_speed" };
+"voltage","volume","volume_flow_rate","volume_storage","water","weight","wind_speed"
+};
 
 static void homeAssistant_create_sensor_data(ha_sensor_entity_t* sensor_entity, cJSON* device_json)
 {
@@ -1804,6 +1797,7 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
         entity_text_add_node(text_node);
     }
 #endif
+
 #if CONFIG_ENTITY_ENABLE_CLIMATE_HVAC
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_CLIMATE_HVAC)) {
         HA_LOG_I("HomeAssistant add text entity\r\n");

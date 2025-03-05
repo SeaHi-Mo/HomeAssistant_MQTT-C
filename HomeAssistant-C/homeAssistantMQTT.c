@@ -1512,7 +1512,7 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
             // memset(select_cur->options_value, 0, 256);
             // memcpy(select_cur->options_value, data, data_len);
             select_cur->option = get_ac_type_enum(select_cur, data, data_len);
-            HA_LOG_D("select_cur->options_value=%s\r\n", select_cur->options[select_cur->option]);
+            // HA_LOG_D("select_cur->options_value=%s\r\n", select_cur->options[select_cur->option]);
             event = HA_EVENT_MQTT_COMMAND_SELECT_VALUE;
             ha_device->entity_select->command_select = select_cur;
             return event;
@@ -1528,7 +1528,9 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
 
     while (button_cur!=ha_device->entity_button->button_list) {
         if (!strncmp(topic, button_cur->command_topic, topic_len)) {
+
             event = HA_EVENT_MQTT_COMMAND_BUTTON;
+
             //找出该实体之后，方便后面操作实体
             ha_device->entity_button->command_button = button_cur;
             return event;

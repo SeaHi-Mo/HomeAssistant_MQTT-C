@@ -1438,24 +1438,15 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
                     cJSON_Delete(root);
                     return event;
                 }
-                if (climateHVAC_cur->modes[0]==NULL) {
-                    for (size_t i = 0; modes_def[i]!=NULL; i++)
-                    {
-                        if (!memcmp(modes->valuestring, modes_def[i], strlen(modes->valuestring))) {
-                            climateHVAC_cur->modes_type = i;
-                            goto _exit;
-                        }
+                if (climateHVAC_cur->modes[0]==NULL)memcpy(climateHVAC_cur->modes, modes_def, sizeof(modes_def));
+                for (size_t i = 0; climateHVAC_cur->modes[i]!=NULL; i++)
+                {
+                    if (!memcmp(modes->valuestring, climateHVAC_cur->modes[i], strlen(modes->valuestring))) {
+                        climateHVAC_cur->modes_type = i;
+                        goto _exit;
                     }
                 }
-                else {
-                    for (size_t i = 0; climateHVAC_cur->modes[i]!=NULL; i++)
-                    {
-                        if (!memcmp(modes->valuestring, climateHVAC_cur->modes[i], strlen(modes->valuestring))) {
-                            climateHVAC_cur->modes_type = i;
-                            goto _exit;
-                        }
-                    }
-                }
+
             _exit:
                 cJSON_Delete(root);
                 event = HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_MODES;
@@ -1487,27 +1478,13 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
         if (climateHVAC_cur->fan_mode_command_topic!=NULL) {
 
             if (!strncmp(topic, climateHVAC_cur->fan_mode_command_topic, topic_len)) {
-                if (climateHVAC_cur->fan_modes[0]!=NULL) {
-                    for (size_t i = 0; climateHVAC_cur->fan_modes[i]!=NULL; i++)
-                    {
-                        if (!strncmp(data, climateHVAC_cur->fan_modes[i], data_len))
-                        {
-                            climateHVAC_cur->fan_modes_type = i;
-                            goto _fammode_exit;
-                        }
+                if (climateHVAC_cur->fan_modes[0]==NULL) memcpy(climateHVAC_cur->fan_modes, fan_modes_def, sizeof(fan_modes_def));
+                for (size_t i = 0;climateHVAC_cur->fan_modes[i]!=NULL; i++)
+                {
+                    if (!strncmp(data, climateHVAC_cur->fan_modes[i], data_len)) {
+                        climateHVAC_cur->fan_modes_type = i;
+                        goto _fammode_exit;
                     }
-                }
-                else {
-
-                    for (size_t i = 0; fan_modes_def[i]!=NULL; i++)
-                    {
-                        if (!strncmp(data, fan_modes_def[i], data_len)) {
-                            climateHVAC_cur->fan_modes_type = i;
-                            goto _fammode_exit;
-                        }
-
-                    }
-
                 }
             _fammode_exit:
                 event = HA_EVENT_MQTT_COMMAND_CLIMATE_HVAC_FAN_MODES;
@@ -1522,7 +1499,7 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
         if (climateHVAC_cur->next == ha_device->entity_climateHVAC->climateHVAC_list)break;
         else
             climateHVAC_cur = climateHVAC_cur->next;
-}
+    }
 
 #endif
 
@@ -1564,7 +1541,7 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
 #endif
 
     return event;
-    }
+}
 
 //单独更新所有实体的配置，当homeAssistant重启时更新实体上线
 void update_all_entity_to_homeassistant(void)
@@ -2125,7 +2102,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
                 ret_id = homeAssistant_mqtt_port_public(climateHVAC_node->mode_state_topic, "off", 0, 1);
             }
         }
-}
+    }
 #endif
 
 #if CONFIG_ENTITY_ENABLE_SELECT
@@ -2138,7 +2115,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
     }
 #endif
     return ret_id;
-    }
+}
 
 void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
 {

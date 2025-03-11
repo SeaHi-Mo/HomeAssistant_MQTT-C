@@ -16,16 +16,17 @@ HomeAssistant_MQTT-C 这是一个主要为安信可 WiFi 模组开发的HomeAssi
 **master 分支已开发完成的实体：**<span id="ok_entity_type"></span>
 |实体类型|实体名称|状态|
 | :-: | :-: |  :-:  |
-|switch|开关|:white_check_mark:|
-|sensor|传感器|:white_check_mark:|
-|binary sensor|二进制传感器|:white_check_mark: |
+|Switch|开关|:white_check_mark:|
+|Sensor|传感器|:white_check_mark:|
+|Binary sensor|二进制传感器|:white_check_mark: |
 |Light|灯|:white_check_mark:|
 |Text|文本|:white_check_mark:|
 |Number|数字|:white_check_mark:|
-|climateHVAC|空调/温控器|:white_check_mark:|
+|ClimateHVAC|空调/温控器|:white_check_mark:|
 |Select|选择器/下拉选择框|:white_check_mark:|
 |Button|按钮|:white_check_mark:|
-|device Trigger|触发器|:white_check_mark:|
+|Device Trigger|触发器|:white_check_mark:|
+|Scene|场景激活实体|:white_check_mark:|
 ## 基本使用方法
 
 ### 源码获取

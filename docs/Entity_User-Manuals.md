@@ -41,7 +41,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
 |[Lock]() |CONFIG_HA_ENTITY_LOCK | 门锁实体 |:x:|
 |[Notify]() |CONFIG_HA_ENTITY_NOTIFY | 通知实体 |:x:|
 |[Number]() |CONFIG_HA_ENTITY_NUMBER | 数字实体 |:white_check_mark:|
-|[Scene]() |CONFIG_HA_ENTITY_SCENE | 场景实体 |:x:|
+|[Scene](#scene) |CONFIG_HA_ENTITY_SCENE | 场景实体 |:white_check_mark:|
 |[Select]() |CONFIG_HA_ENTITY_SELECT | 选择器实体 |:white_check_mark:|
 |[Sensor]() |CONFIG_HA_ENTITY_SENSOR | 传感器实体 |:white_check_mark:|
 |[Siren]() |CONFIG_HA_ENTITY_SIREN | 警报器实体 |:x:|
@@ -1218,7 +1218,7 @@ Button 预设只有三种类型，它们的设置方法如下：
 Device Trigger 是一个设备触发器，可以用于触发一些动作，比如按键的按下、松开、长按等。通常会配合HomeAssistant的自动化脚本来使用。
 
 ### 步骤1.开启Device Trigger资源
-Device Trigger 需要开启`CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER`资源，需要通过以下方式开启Button资源：
+Device Trigger 需要开启`CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER`资源，需要通过以下方式开启Device Trigger资源：
 - 1. 打开[homeAssistantDevConfig.h](../HomeAssistant-C/homeAssistantDevConfig.h)
 - 2. 设置`CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER`为`1`<br>
 如：<br>![alt text](./IMG/devTrig.png)
@@ -1291,7 +1291,91 @@ homeAssistant_device_add_entity(CONFIG_HA_ENTITY_DEVICE_TRIGGER, &trig_entity);
 .... //其他代码
 homeAssistant_device_send_entity_state(CONFIG_HA_ENTITY_DEVICE_TRIGGER, &trig_entity, 0);
 ```
+## Scene
 
+Scene 场景实体，你可以用来做智能家居场景配置。例如：回家模式、离家模式、睡眠模式、娱乐模式等。
+> **注意：** 一个场景等于一个实体，当你有多个场景的时候，就需要创建多个场景实体，每个场景实体都需要一个唯一的`unique_id`。如果你需要一个实体多个场景选择的话，[Select](#select)实体会更好。
+
+### 步骤1.开启Scene资源
+
+Scene 需要开启`CONFIG_ENTITY_ENABLE_SCENE`资源，需要通过以下方式开启SCENE资源：
+- 1. 打开[homeAssistantDevConfig.h](../HomeAssistant-C/homeAssistantDevConfig.h)
+- 2. 设置`CONFIG_ENTITY_ENABLE_SCENE`为`1`<br>
+如：<br>![alt text](./IMG/Scene.png)
+
+
+### 步骤2.创建Scene实体
+> :warning:**前提条件:**<br>
+> - 1.创建实体的前提条件是已经开启了对应的资源<br>
+> - 2.必须设备上线之前创建好实体，否则设备上线后，HomeAssistant无法识别实体。<br>
+
+- 1.  创建Scene实体,需要先创建ha_scene_entity_t结构体.如：<br>
+  ```c
+    static ha_scene_entity_t trig_entity = {
+               .name = "回家模式",
+              .unique_id = "scene_01",
+            };
+  ```
+
+- 2. 利用`homeAssistant_device_add_entity`将实体添加到设备中,如：<br>
+  ```c
+     static ha_scene_entity_t scene_entity = {
+               .name = "回家模式",
+              .unique_id = "scene_01",
+            };
+    homeAssistant_device_add_entity(CONFIG_HA_ENTITY_SCENE, &scene_entity);
+  ```
+#### icon 设置：请参考[icon章节](#icon)
+#### Scene 可配置参数
+ 
+|参数名称|权限<br>:red_circle:必选 :green_circle:可选|参数类型|参数说明|
+|:---:|:---:|:---:|:---:|
+|availability_topic|:green_circle:|char*|设备可用性主题|
+|availability_mode|:green_circle:|char*|设备可用性模式|
+|availability_template|:green_circle:|char*|设备可用性模板|
+|command_topic|:green_circle:|char*|命令主题|
+|enabled_by_default|:green_circle:|bool|是否默认启用|
+|entity_category|:green_circle:|char*|实体类别|
+|entity_picture|:green_circle:|char*|实体图片的URL|
+|encoding|:green_circle:|char*|编码|
+|[icon](#icon)|:green_circle:|char*|图标|
+|json_attributes_template|:green_circle:|char*|JSON属性模板|
+|json_attributes_topic|:green_circle:|char*|JSON属性主题|
+|name|:red_circle:|char*|名称|
+|object_id|:green_circle:|char*|对象ID|
+|payload_available|:green_circle:|char*|可用负载|
+|payload_not_available|:green_circle:|char*|不可用负载|
+|payload_on|:green_circle:|char*|开启负载|
+|platform|:green_circle:|char*|平台|
+|qos|:green_circle:|int|质量服务|
+|retain|:green_circle:|char*|保留|
+|unique_id|:red_circle:|char*|唯一ID|
+|entity_config_topic|:green_circle:|char*|实体配置主题|
+
+### 步骤3.接收Scene信息
+
+HomeAssistant 下发场景激活的命令之后，设备端会触发`HA_EVENT_MQTT_COMMAND_SCENE_VALUE`事件，你可以在事件回调函数中加入`HA_EVENT_MQTT_COMMAND_SCENE_VALUE`事件的处理逻辑，并且可以使用 `scene_state` 来识别该场景是否被激活如：
+```c
+static void ha_event_cb(ha_event_t event, homeAssisatnt_device_t* ha_dev)
+{
+    switch (event)
+    {
+      //其他事件
+      case HA_EVENT_MQTT_COMMAND_SCENE_VALUE:
+          printf("HA_EVENT_MQTT_COMMAND_SCENE_VALUE\n");
+          HA_LOG_I("<<<<<<<<<<  HA_EVENT_MQTT_COMMAND_SCENE_VALUE\r\n");
+          //接收被激活的场景
+          ha_scene_entity_t* scene_entity = (ha_scene_entity_t*)ha_dev->entity_scene->command_scene;
+            //判断场景
+            if (strcmp(scene_entity->unique_id, "scene_01") == 0) {
+                HA_LOG_D("%s is %s\r\n", scene_entity->name, scene_entity->scene_state?"on":"off");
+            }
+          break;
+    default:
+        break;
+    }
+}
+```
 ## icon
 
 icon 即图标，每个实体你都可以自定义icon,让实体看起来更加美观。而你只需要在实体配置中添加`icon`字段即可,名称前缀为 mdi:，即 mdi:home。 例如：

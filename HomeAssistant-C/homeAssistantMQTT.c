@@ -1407,6 +1407,9 @@ static void homeAssistant_create_scene_data(ha_scene_entity_t* scene_entity, cJS
     if (scene_entity->platform!=NULL)cJSON_AddStringToObject(root, "platform", scene_entity->platform);
     else cJSON_AddStringToObject(root, "platform", "scene");
 
+    if (scene_entity->qos>0) cJSON_AddNumberToObject(root, "qos", scene_entity->qos);
+    if (scene_entity->retain) cJSON_AddTrueToObject(root, "retain");
+
     if (device_json!=NULL)cJSON_AddItemToObject(root, "device", device_json);
     scene_entity->config_data = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);

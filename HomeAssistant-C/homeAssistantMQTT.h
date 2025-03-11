@@ -54,7 +54,9 @@ typedef enum {
 #if CONFIG_ENTITY_ENABLE_BUTTON
     HA_EVENT_MQTT_COMMAND_BUTTON,
 #endif
-
+#if CONFIG_ENTITY_ENABLE_SCENE
+    HA_EVENT_MQTT_COMMAND_SCENE_VALUE,
+#endif
     HA_EVENT_MQTT_ERROR,
 }ha_event_t;
 
@@ -789,6 +791,42 @@ typedef struct {
     ha_devTrig_entity_t* command_devTrig;
 }ha_devTrig_list_t;
 #endif
+
+#if CONFIG_ENTITY_ENABLE_SCENE
+typedef struct homeAssisatnt_entity_scene {
+    char* availability_topic;
+    char* availability_mode;
+    char* availability_template;
+    char* command_topic;
+    bool enabled_by_default;
+    char* entity_category;
+    char* entity_picture;
+    char* encoding;
+    char* icon;
+    char* json_attributes_template;
+    char* json_attributes_topic;
+    char* name;
+    char* object_id;
+    char* payload_available;
+    char* payload_not_available;
+    char* payload_on;
+    char* platform;
+    int qos;
+    char* retain;
+    char* unique_id;
+    char* entity_config_topic;    //实体自动发现需要的topic，已经自动赋值，可以不配置
+    char* config_data;      //开关的自动发现的json数据
+    bool scene_state;
+    struct homeAssisatnt_entity_scene* prev;
+    struct homeAssisatnt_entity_scene* next;
+}ha_scene_entity_t;
+
+typedef struct {
+    char* entity_type;
+    ha_scene_entity_t* scene_list;
+    ha_scene_entity_t* command_scene;
+}ha_scene_list_t;
+#endif
 /**
  * @brief  设备信息
  *
@@ -841,6 +879,9 @@ typedef struct homeAssisatnt_device {
 #endif
 #if CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER
     ha_devTrig_list_t* entity_devTrig;
+#endif
+#if CONFIG_ENTITY_ENABLE_SCENE
+    ha_scene_list_t* entity_scene;
 #endif
     ha_mqtt_info_t mqtt_info;
     bool homeassistant_online;

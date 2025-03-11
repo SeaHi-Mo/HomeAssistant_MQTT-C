@@ -82,7 +82,7 @@ static void homeAssistant_create_switch_data(ha_sw_entity_t* switch_entity, cJSO
     {
         unique_id = pvPortMalloc(32);
         memset(unique_id, 0, 32);
-        sprintf(unique_id, "%s-%02x%2x", switch_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "%s-%02x%02x", switch_entity->unique_id, STA_MAC[4], STA_MAC[5]);
         HA_LOG_F("unique_id =%s\r\n", unique_id);
     }
     cJSON_AddStringToObject(root, "unique_id", unique_id);
@@ -182,7 +182,7 @@ static void homeAssistant_create_light_data(ha_lh_entity_t* light_entity, cJSON*
     {
         unique_id = pvPortMalloc(32);
         memset(unique_id, 0, 32);
-        sprintf(unique_id, "%s-%02x%2x", light_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "%s-%02x%02x", light_entity->unique_id, STA_MAC[4], STA_MAC[5]);
         HA_LOG_F("unique_id =%s\r\n", unique_id);
     }
     cJSON_AddStringToObject(root, "unique_id", unique_id);
@@ -340,7 +340,7 @@ static void homeAssistant_create_sensor_data(ha_sensor_entity_t* sensor_entity, 
     {
         unique_id = pvPortMalloc(32);
         memset(unique_id, 0, 32);
-        sprintf(unique_id, "%s-%02x%2x", sensor_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "%s-%02x%02x", sensor_entity->unique_id, STA_MAC[4], STA_MAC[5]);
         HA_LOG_F("unique_id =%s\r\n", unique_id);
     }
     cJSON_AddStringToObject(root, "unique_id", unique_id);
@@ -432,7 +432,7 @@ static void homeAssistant_create_binary_sensor_data(ha_Bsensor_entity_t* binary_
     {
         unique_id = pvPortMalloc(32);
         memset(unique_id, 0, 32);
-        sprintf(unique_id, "%s-%02x%2x", binary_sensor_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "%s-%02x%02x", binary_sensor_entity->unique_id, STA_MAC[4], STA_MAC[5]);
         HA_LOG_F("unique_id =%s\r\n", unique_id);
     }
     cJSON_AddStringToObject(root, "unique_id", unique_id);
@@ -525,7 +525,7 @@ static void homeAssistant_create_text_data(ha_text_entity_t* text_entity, cJSON*
     {
         char* unique_id = unique_id = pvPortMalloc(5);
         memset(unique_id, 0, 5);
-        sprintf(unique_id, "-%02x%2x", STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "-%02x%02x", STA_MAC[4], STA_MAC[5]);
         HA_LOG_F("unique_id =%s\r\n", unique_id);
         text_entity->unique_id = strncat(text_entity->unique_id, unique_id, 5);
         cJSON_AddStringToObject(root, "unique_id", text_entity->unique_id);
@@ -648,7 +648,7 @@ static void homeAssistant_create_number_data(ha_number_entity_t* number_entity, 
 
         if (unique_id==NULL) unique_id = pvPortMalloc(64);
         memset(unique_id, 0, 64);
-        sprintf(unique_id, "%s-%02x%2x", number_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "%s-%02x%02x", number_entity->unique_id, STA_MAC[4], STA_MAC[5]);
         cJSON_AddStringToObject(root, "unique_id", unique_id);
     }
     else HA_LOG_E("unique id is null for entity:%s \r\n", number_entity->name);
@@ -775,7 +775,7 @@ static void homeAssistant_create_climate_HVAC_data(ha_climateHVAC_t* climateHVAC
     {
         unique_id = pvPortMalloc(32);
         memset(unique_id, 0, 32);
-        sprintf(unique_id, "%s-%02x%2x", climateHVAC_entity->unique_id, STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "%s-%02x%02x", climateHVAC_entity->unique_id, STA_MAC[4], STA_MAC[5]);
         HA_LOG_F("unique_id =%s\r\n", unique_id);
 
     }
@@ -1132,7 +1132,7 @@ static void  entity_select_add_node(ha_select_t* select_new_node)
     {
         unique_id = pvPortMalloc(32);
         memset(unique_id, 0, 32);
-        sprintf(unique_id, "%s-%02x%2x", select_new_node->unique_id, STA_MAC[4], STA_MAC[5]);
+        sprintf(unique_id, "%s-%02x%02x", select_new_node->unique_id, STA_MAC[4], STA_MAC[5]);
         HA_LOG_F("unique_id =%s\r\n", unique_id);
     }
     //开始创建新的实体数据
@@ -1204,13 +1204,7 @@ static void homeAssistant_create_button_data(ha_btn_entity_t* button_entity, cJS
     if (button_entity->name!=NULL)cJSON_AddStringToObject(root, "name", button_entity->name);
     if (button_entity->device_class!=NULL)cJSON_AddStringToObject(root, "device_class", button_entity->device_class);
 
-    if (unique_id==NULL&&button_entity->unique_id!=NULL)
-    {
-        unique_id = pvPortMalloc(32);
-        memset(unique_id, 0, 32);
-        sprintf(unique_id, "%s-%02x%2x", button_entity->unique_id, STA_MAC[4], STA_MAC[5]);
-        HA_LOG_F("unique_id =%s\r\n", unique_id);
-    }
+
     cJSON_AddStringToObject(root, "unique_id", unique_id);
     if (button_entity->object_id!=NULL)cJSON_AddStringToObject(root, "object_id", button_entity->object_id);
 
@@ -1250,6 +1244,13 @@ static void entity_button_add_node(ha_btn_entity_t* button_new_node)
 
     //添加新的节点
     ha_btn_entity_t* button_list_handle = ha_device->entity_button->button_list->prev;
+    if (unique_id==NULL&&button_new_node->unique_id!=NULL)
+    {
+        unique_id = pvPortMalloc(32);
+        memset(unique_id, 0, 32);
+        sprintf(unique_id, "%s-%02x%02x", button_new_node->unique_id, STA_MAC[4], STA_MAC[5]);
+        HA_LOG_F("unique_id =%s\r\n", unique_id);
+    }
     //开始创建新的实体数据
     homeAssistant_create_button_data(button_new_node, homeAssistant_device_create());
     if (button_new_node->entity_config_topic==NULL) {
@@ -1367,6 +1368,93 @@ static void entity_device_trigger_add_node(ha_devTrig_entity_t* devTrig_new_node
     ha_device->entity_devTrig->devTrig_list->prev = devTrig_new_node;
 
     vPortFree(devTrig_new_node->config_data);
+}
+#endif
+
+#if CONFIG_ENTITY_ENABLE_SCENE
+static void homeAssistant_create_scene_data(ha_scene_entity_t* scene_entity, cJSON* device_json)
+{
+    if (scene_entity==NULL) {
+        HA_LOG_E("entity button buff is NULL\r\n");
+        return;
+    }
+    cJSON* root = cJSON_CreateObject();
+    if (scene_entity->name!=NULL) cJSON_AddStringToObject(root, "name", scene_entity->name);
+
+    if (unique_id!=NULL) cJSON_AddStringToObject(root, "unique_id", unique_id);
+
+    if (scene_entity->availability_mode!=NULL)cJSON_AddStringToObject(root, "availability_mode", scene_entity->availability_mode);
+    if (scene_entity->availability_template!=NULL)cJSON_AddStringToObject(root, "availability_template", scene_entity->availability_template);
+    if (scene_entity->availability_topic!=NULL)cJSON_AddStringToObject(root, "availability_topic", scene_entity->availability_topic);
+    else cJSON_AddStringToObject(root, "availability_topic", ha_device->availability_topic);
+
+    if (scene_entity->command_topic!=NULL) cJSON_AddStringToObject(root, "command_topic", scene_entity->command_topic);
+    if (scene_entity->entity_category!=NULL)cJSON_AddStringToObject(root, "entity_category", scene_entity->entity_category);
+    if (scene_entity->icon!=NULL)cJSON_AddStringToObject(root, "icon", scene_entity->icon);
+    if (scene_entity->entity_picture!=NULL)cJSON_AddStringToObject(root, "entity_picture", scene_entity->entity_picture);
+    if (scene_entity->json_attributes_template!=NULL)cJSON_AddStringToObject(root, "json_attributes_template", scene_entity->json_attributes_template);
+    if (scene_entity->json_attributes_topic!=NULL)cJSON_AddStringToObject(root, "json_attributes_topic", scene_entity->json_attributes_topic);
+
+    if (scene_entity->payload_available!=NULL) cJSON_AddStringToObject(root, "payload_available", scene_entity->payload_available);
+    else cJSON_AddStringToObject(root, "payload_available", ha_device->payload_available);
+
+    if (scene_entity->payload_not_available!=NULL) cJSON_AddStringToObject(root, "payload_not_available", scene_entity->payload_not_available);
+    else cJSON_AddStringToObject(root, "payload_not_available", ha_device->payload_not_available);
+
+    if (scene_entity->payload_on!=NULL) cJSON_AddStringToObject(root, "payload_on", scene_entity->payload_on);
+    else cJSON_AddStringToObject(root, "payload_on", "ON");
+
+    if (scene_entity->platform!=NULL)cJSON_AddStringToObject(root, "platform", scene_entity->platform);
+    else cJSON_AddStringToObject(root, "platform", "scene");
+
+    if (device_json!=NULL)cJSON_AddItemToObject(root, "device", device_json);
+    scene_entity->config_data = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    HA_LOG_D("config_data:%s\r\n", scene_entity->config_data);
+}
+
+static void entity_scene_add_node(ha_scene_entity_t* scene_new_node)
+{
+    assert(ha_device->entity_scene->scene_list);
+
+    //添加新的节点
+    ha_scene_entity_t* scene_list_handle = ha_device->entity_scene->scene_list->prev;
+    if (unique_id==NULL&&scene_new_node->unique_id!=NULL)
+    {
+        unique_id = pvPortMalloc(32);
+        memset(unique_id, 0, 32);
+        sprintf(unique_id, "%s-%02x%02x", scene_new_node->unique_id, STA_MAC[4], STA_MAC[5]);
+        HA_LOG_F("unique_id =%s\r\n", unique_id);
+    }
+    if (scene_new_node->command_topic==NULL) {
+        scene_new_node->command_topic = pvPortMalloc(128);
+        memset(scene_new_node->command_topic, 0, 128);
+        sprintf(scene_new_node->command_topic, "%s/%s/%s/set", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_SCENE, unique_id);
+
+    }
+    //开始创建新的实体数据
+    homeAssistant_create_scene_data(scene_new_node, homeAssistant_device_create());
+    if (scene_new_node->entity_config_topic==NULL) {
+        scene_new_node->entity_config_topic = pvPortMalloc(128);
+        memset(scene_new_node->entity_config_topic, 0, 128);
+        sprintf(scene_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_SCENE, unique_id);
+    }
+
+    if (ha_device->mqtt_info.mqtt_connect_status) {
+        homeAssistant_mqtt_port_public(scene_new_node->entity_config_topic, scene_new_node->config_data, 1, 1);
+        homeAssistant_mqtt_port_subscribe(scene_new_node->command_topic, 1);
+    }
+    else {
+        HA_LOG_E("MQTT server is diconnenct\r\n");
+    }
+    //插入节点
+    scene_list_handle->next = scene_new_node;
+    scene_new_node->prev = scene_list_handle;
+    scene_new_node->next = ha_device->entity_scene->scene_list;
+    ha_device->entity_scene->scene_list->prev = scene_new_node;
+    vPortFree(unique_id);
+    unique_id = NULL;
+    vPortFree(scene_new_node->config_data);
 }
 #endif
 /**
@@ -1633,7 +1721,29 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
             button_cur = button_cur->next;
     }
 #endif
+#if CONFIG_ENTITY_ENABLE_SCENE
+    ha_scene_entity_t* scene_cur = ha_device->entity_scene->scene_list->next;
 
+    while (scene_cur!=ha_device->entity_scene->scene_list) {
+        if (!strncmp(topic, scene_cur->command_topic, topic_len)) {
+
+            event = HA_EVENT_MQTT_COMMAND_SCENE_VALUE;
+            if (scene_cur->payload_on==NULL) {
+                scene_cur->payload_on = pvPortMalloc(32);
+                memset(scene_cur->payload_on, 0, 32);
+            }
+            strncpy(scene_cur->payload_on, data, data_len);
+            scene_cur->scene_state = strcmp(scene_cur->payload_on, "ON")==0?1:0;
+            //找出该实体之后，方便后面操作实体
+            ha_device->entity_scene->command_scene = scene_cur;
+            return event;
+        }
+        //指针指向下一个节点
+        if (scene_cur->next==ha_device->entity_scene->scene_list) break;
+        else
+            scene_cur = scene_cur->next;
+    }
+#endif
     return event;
 }
 
@@ -1841,6 +1951,23 @@ void update_all_entity_to_homeassistant(void)
         }
     }
 #endif
+#if CONFIG_ENTITY_ENABLE_SCENE
+    ha_scene_entity_t* scene_cur = ha_device->entity_scene->scene_list->next;
+    if (scene_cur!=ha_device->entity_scene->scene_list) {
+        while (scene_cur!=ha_device->entity_scene->scene_list) {
+            if (scene_cur->entity_config_topic!=NULL) {
+                homeAssistant_create_scene_data(scene_cur, homeAssistant_device_create());
+                homeAssistant_mqtt_port_public(scene_cur->entity_config_topic, scene_cur->config_data, 0, 0);
+                vPortFree(scene_cur->config_data);
+            }
+            //实体上线
+            if (scene_cur->availability_topic!=NULL)
+                ret = homeAssistant_mqtt_port_public(scene_cur->availability_topic, scene_cur->payload_available, 0, 1);
+            else  ret = homeAssistant_mqtt_port_public(ha_device->availability_topic, ha_device->payload_available, 0, 1);
+            scene_cur = scene_cur->next;
+        }
+    }
+#endif
     homeAssistant_device_send_status(HOMEASSISTANT_STATUS_ONLINE);
 
 }
@@ -2000,7 +2127,13 @@ void homeAssistant_device_init(homeAssisatnt_device_t* ha_dev, void(*event_cb)(h
     ha_device->entity_devTrig->devTrig_list->prev = ha_device->entity_devTrig->devTrig_list;
     ha_device->entity_devTrig->devTrig_list->next = ha_device->entity_devTrig->devTrig_list;
 #endif
-
+#if CONFIG_ENTITY_ENABLE_SCENE
+    ha_device->entity_scene = pvPortMalloc(sizeof(ha_scene_list_t));
+    ha_device->entity_scene->entity_type = CONFIG_HA_ENTITY_SCENE;
+    ha_device->entity_scene->scene_list = pvPortMalloc(sizeof(ha_scene_entity_t));
+    ha_device->entity_scene->scene_list->prev = ha_device->entity_scene->scene_list;
+    ha_device->entity_scene->scene_list->next = ha_device->entity_scene->scene_list;
+#endif
     ha_device->event_cb = event_cb;
     homeAssistant_mqtt_init(ha_device);
     vPortFree(buff);
@@ -2111,7 +2244,7 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
 
 #if CONFIG_ENTITY_ENABLE_BUTTON
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_BUTTON)) {
-        //添加 switch 节点
+
         ha_btn_entity_t* button_node = (ha_btn_entity_t*)ha_entity_list;
         entity_button_add_node(button_node);
     }
@@ -2119,9 +2252,17 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
 
 #if CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_DEVICE_TRIGGER)) {
-        //添加 switch 节点
+
         ha_devTrig_entity_t* devTrig_node = (ha_devTrig_entity_t*)ha_entity_list;
         entity_device_trigger_add_node(devTrig_node);
+    }
+#endif
+#if CONFIG_ENTITY_ENABLE_SCENE
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_SCENE)) {
+
+        HA_LOG_I("HomeAssistant add scene entity\r\n");
+        ha_scene_entity_t* scene_node = (ha_scene_entity_t*)ha_entity_list;
+        entity_scene_add_node(scene_node);
     }
 #endif
 }
@@ -2249,7 +2390,7 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
     }
 #endif
     return ret_id;
-}
+    }
 
 void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
 {
@@ -2367,6 +2508,17 @@ void* homeAssistant_fine_entity(char* entity_type, const char* unique_id)
                 return devTrig_cur;
             }
             devTrig_cur = devTrig_cur->next;
+        }
+    }
+#endif
+#if CONFIG_ENTITY_ENABLE_SCENE
+    if (!strcmp(entity_type, CONFIG_HA_ENTITY_SCENE)) {
+        ha_scene_entity_t* scene_cur = ha_device->entity_scene->scene_list->next;
+        while (scene_cur!=ha_device->entity_scene->scene_list) {
+            if (!strncmp(scene_cur->unique_id, unique_id, strlen(unique_id))) {
+                return scene_cur;
+            }
+            scene_cur = scene_cur->next;
         }
     }
 #endif

@@ -4,7 +4,7 @@
 
 </div>
 
-![version](https://img.shields.io/badge/Version-0.0.2-blue)
+![version](https://img.shields.io/badge/Version-0.0.3-blue)
 
 ## 简介
 

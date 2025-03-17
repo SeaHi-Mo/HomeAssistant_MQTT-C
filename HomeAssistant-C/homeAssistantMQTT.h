@@ -937,11 +937,21 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
  * @return void* 返回的实体指针
 */
 void* homeAssistant_fine_entity(char* entity_type, const char* unique_id);
+/**
+ * @brief homeAssistant_device_quickly_send_data
+ *         快速发送数据，这个函数会自动查找实体，然后发送数据  
+ * @param entity_type  实体类型
+ * @param unique_id 实体的 unique id
+ * @param data 需要传输的数据
+ * @return int 
+ */
+int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, char* data);
 
 /**
  * @brief 更新所有实体信息
  *
 */
 void update_all_entity_to_homeassistant(void);
+
 #endif
 

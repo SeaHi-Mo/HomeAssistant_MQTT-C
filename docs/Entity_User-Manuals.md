@@ -44,20 +44,20 @@ int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, c
 |[Fan](#fan)|CONFIG_HA_ENTITY_FAN | 风扇实体 |:x:|
 |[Humidifier](#humidifier) |CONFIG_HA_ENTITY_HUMIDIFIER | 加湿器实体 |:x:|
 |[Image]() |CONFIG_HA_ENTITY_IMAGE | 图片实体 |:x:|
-|[Climate/HVAC]() |CONFIG_HA_ENTITY_CLIMATE_HVAC | 空调实体 |:white_check_mark:|
+|[Climate/HVAC](#climatehvac) |CONFIG_HA_ENTITY_CLIMATE_HVAC | 空调实体 |:white_check_mark:|
 |[Lawn mower]() |CONFIG_HA_ENTITY_LAWN_MOWER | 割草机实体 |:x:|
-|[Light]() |CONFIG_HA_ENTITY_LIGHT | 灯实体 |:white_check_mark:|
+|[Light](#light) |CONFIG_HA_ENTITY_LIGHT | 灯实体 |:white_check_mark:|
 |[Lock]() |CONFIG_HA_ENTITY_LOCK | 门锁实体 |:x:|
 |[Notify]() |CONFIG_HA_ENTITY_NOTIFY | 通知实体 |:x:|
-|[Number]() |CONFIG_HA_ENTITY_NUMBER | 数字实体 |:white_check_mark:|
+|[Number](#number) |CONFIG_HA_ENTITY_NUMBER | 数字实体 |:white_check_mark:|
 |[Scene](#scene) |CONFIG_HA_ENTITY_SCENE | 场景实体 |:white_check_mark:|
-|[Select]() |CONFIG_HA_ENTITY_SELECT | 选择器实体 |:white_check_mark:|
-|[Sensor]() |CONFIG_HA_ENTITY_SENSOR | 传感器实体 |:white_check_mark:|
+|[Select](#select) |CONFIG_HA_ENTITY_SELECT | 选择器实体 |:white_check_mark:|
+|[Sensor](#sensor) |CONFIG_HA_ENTITY_SENSOR | 传感器实体 |:white_check_mark:|
 |[Siren]() |CONFIG_HA_ENTITY_SIREN | 警报器实体 |:x:|
-|[Switch]() |CONFIG_HA_ENTITY_SWITCH | 开关实体 |:white_check_mark:|
+|[Switch](#switch) |CONFIG_HA_ENTITY_SWITCH | 开关实体 |:white_check_mark:|
 |[Update]() |CONFIG_HA_ENTITY_UPDATE | 更新实体 |:x:|
 |[Tag scanner]() |CONFIG_HA_ENTITY_TAG_SCANNER | 标签扫描仪实体 |:x:|
-|[Text]() |CONFIG_HA_ENTITY_TEXT | 文本实体 |:white_check_mark:|
+|[Text](#text) |CONFIG_HA_ENTITY_TEXT | 文本实体 |:white_check_mark:|
 |[Vacuum]() |CONFIG_HA_ENTITY_VACUUM | 真空吸尘器实体 |:x:|
 |[Valve]() |CONFIG_HA_ENTITY_VALVE | 阀门实体 |:x:|
 |[Water heater]() |CONFIG_HA_ENTITY_WATER_HEATER | 热水器实体 |:x:|
@@ -95,7 +95,7 @@ Switch 实体是HomeAssistant中的一种设备类型，用于表示可以打开
 - 2. 设置`CONFIG_ENTITY_ENABLE_SWITCH`为`1`<br>
 如：<br>![alt text](./IMG/sw_1.png)
 
-### 步骤2.创建Switch实体
+### 步骤2.创建Switch实体v
 
 > :warning:**前提条件:**<br>
 > - 1.创建实体的前提条件是已经开启了对应的资源，例如Switch实体，需要开启Switch资源。<br>

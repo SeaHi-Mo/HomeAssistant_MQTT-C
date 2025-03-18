@@ -14,11 +14,20 @@ void homeAssistant_device_add_entity(char* entity_type, void* ha_entity_list)
 
 
 ### 发送信息函数
-HomeAssistant_MQTT-C 中，发送信息使用同一个函数，并使用`entity_type`区分：
+#### 1. 按实体发送信息
+HomeAssistant_MQTT-C 中，可以按照实体发送信息使用的函数，实行率较快，使用`entity_type`区分实体类型：
 ```c
 int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_list, unsigned short state);
 ```
+
 >参数说明：`entity_type`为实体类型，`ha_entity_list`为实体信息结构体指针，`state`为状态值。
+
+#### 2. 按照unique_id发送信息
+HomeAssistant_MQTT-C 中，如果你找不到对应的实体类型，也可以直接使用`homeAssistant_device_quickly_send_data`函数发送信息：
+```c
+int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, char* data)
+```
+> 参数说明：`entity_type`为实体类型，`unique_id`为实体唯一ID，`data`为需要发送的数据。
 
 ### entity_type 实体类型：
 

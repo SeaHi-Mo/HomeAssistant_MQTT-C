@@ -146,6 +146,9 @@ static void entity_swith_add_node(ha_sw_entity_t* switch_new_node)
     if (ha_device->mqtt_info.mqtt_connect_status) {
         homeAssistant_mqtt_port_public(switch_new_node->entity_config_topic, switch_new_node->config_data, 1, 1);
         if (switch_new_node->command_topic!=NULL)homeAssistant_mqtt_port_subscribe(switch_new_node->command_topic, 1);
+        //发送初始化状态
+        if(switch_new_node->state_topic!=NULL)
+            homeAssistant_mqtt_port_public(switch_new_node->state_topic, switch_new_node->switcht_state?switch_new_node->payload_on:switch_new_node->payload_off, 0, 0);
         if (switch_new_node->availability_topic!=NULL)
             homeAssistant_mqtt_port_public(switch_new_node->availability_topic, switch_new_node->payload_available, 0, 0);
     }
@@ -268,34 +271,61 @@ static void  entity_light_add_node(ha_lh_entity_t* light_new_node)
 {
     // assert(ha_device->entity_light->light_list);
     ha_lh_entity_t* light_list_handle = ha_device->entity_light->light_list->prev;
+
+    ha_lh_entity_t* light_node_buff=pvPortMalloc(sizeof(ha_lh_entity_t));
+    memset(light_node_buff, 0, sizeof(ha_lh_entity_t));
+    memcpy(light_node_buff, light_new_node, sizeof(ha_lh_entity_t));
+   
     //开始创建新的实体数据
-    homeAssistant_create_light_data(light_new_node, homeAssistant_device_create());
-    if (light_new_node->entity_config_topic==NULL) {
-        light_new_node->entity_config_topic = pvPortMalloc(128);
-        memset(light_new_node->entity_config_topic, 0, 128);
-        sprintf(light_new_node->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_LIGHT, unique_id);
+    homeAssistant_create_light_data(light_node_buff, homeAssistant_device_create());
+    if (light_node_buff->entity_config_topic==NULL) {
+        light_node_buff->entity_config_topic = pvPortMalloc(128);
+        memset(light_node_buff->entity_config_topic, 0, 128);
+        sprintf(light_node_buff->entity_config_topic, "%s/%s/%s/config", CONFIG_HA_AUTOMATIC_DISCOVERY, CONFIG_HA_ENTITY_LIGHT, unique_id);
     }
     if (ha_device->mqtt_info.mqtt_connect_status) {
-        homeAssistant_mqtt_port_public(light_new_node->entity_config_topic, light_new_node->config_data, 1, 1);
-        if (light_new_node->command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_new_node->command_topic, 1);
-        if (light_new_node->rgbw.rgbw_command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_new_node->rgbw.rgbw_command_topic, 1);
-        if (light_new_node->brightness.brightness_command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_new_node->brightness.brightness_command_topic, 1);
-        if (light_new_node->rgb.rgb_command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_new_node->rgb.rgb_command_topic, 1);
-        if (light_new_node->availability_topic!=NULL)
-            homeAssistant_mqtt_port_public(light_new_node->availability_topic, light_new_node->payload_available, 0, 0);
+        homeAssistant_mqtt_port_public(light_node_buff->entity_config_topic, light_node_buff->config_data, 1, 0);
+        if (light_node_buff->command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_node_buff->command_topic, 1);
+        //发送初始化开关状态
+        if (light_node_buff->state_topic!=NULL){
+            homeAssistant_mqtt_port_public(light_node_buff->state_topic, light_node_buff->light_state?light_node_buff->payload_on:light_node_buff->payload_off,0, 0);
+        }
+        //发送初始化RGB的值
+        if (light_node_buff->rgb.rgb_command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_node_buff->rgb.rgb_command_topic, 1);
+        if(light_node_buff->light_state&& (light_node_buff->rgb.red!=0||light_node_buff->rgb.green!=0||light_node_buff->rgb.blue!=0)){
+            char* rgb_data = pvPortMalloc(16);
+            sprintf(rgb_data, "%d,%d,%d", light_node_buff->rgb.red, light_node_buff->rgb.green, light_node_buff->rgb.blue);
+            homeAssistant_mqtt_port_public(light_node_buff->rgb.rgb_state_topic, rgb_data,0, 0);
+            vPortFree(rgb_data);
+        }
+        //发送初始化亮度的值
+        if (light_node_buff->brightness.brightness_command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_node_buff->brightness.brightness_command_topic, 1);
+        if (light_node_buff->light_state&&light_node_buff->brightness.brightness!=0)homeAssistant_mqtt_port_public(light_node_buff->brightness.brightness_state_topic, light_node_buff->brightness.brightness, 0, 0);
+        //发送初始化 HS 的值
+        if (light_node_buff->hs.hs_command_topic!=NULL)homeAssistant_mqtt_port_subscribe(light_node_buff->hs.hs_command_topic, 1);
+        if (light_node_buff->light_state&& (light_node_buff->hs.hue!=0||light_node_buff->hs.saturation!=0)){
+            char* hs_data = pvPortMalloc(16);
+            sprintf(hs_data, "%0.3f,%0.3f", light_node_buff->hs.hue, light_node_buff->hs.saturation);
+            homeAssistant_mqtt_port_public(light_node_buff->hs.hs_state_topic, hs_data, 0, 0);
+            vPortFree(hs_data);
+        }
+        if (light_node_buff->availability_topic!=NULL)
+            homeAssistant_mqtt_port_public(light_node_buff->availability_topic, light_node_buff->payload_available, 0, 0);
     }
     else {
         HA_LOG_E("MQTT server is diconnenct\r\n");
     }
     //插入节点
-    light_list_handle->next = light_new_node;
-    light_new_node->prev = light_list_handle;
-    light_new_node->next = ha_device->entity_light->light_list;
-    ha_device->entity_light->light_list->prev = light_new_node;
+    light_list_handle->next = light_node_buff;
+    light_node_buff->prev = light_list_handle;
+    light_node_buff->next = ha_device->entity_light->light_list;
+    ha_device->entity_light->light_list->prev = light_node_buff;
     vPortFree(unique_id);
     unique_id = NULL;
-    vPortFree(light_new_node->config_data);
+    vPortFree(light_node_buff->config_data);
 }
+
+
 /**
  * @brief homeAssistant_get_light_rgb
  *        获取RGB 值，适用于没有使用格式要求的情况，简单解析出RGB三基色值
@@ -323,6 +353,42 @@ static void homeAssistant_get_light_rgb(ha_lh_entity_t* light_entity, const char
     }
     vPortFree(data_str);
 }
+/**
+ * @brief homeAssistant_get_light_hs
+ *        获取HS 值，适用于没有使用格式要求的情况，简单解析出HS值
+ * @param light_entity 
+ * @param hs_data 
+ * @param data_len 
+ */
+static void homeAssistant_get_light_hs(ha_lh_entity_t* light_entity, const char* hs_data, unsigned short data_len)
+{
+    if (light_entity==NULL || hs_data==NULL) {
+        HA_LOG_E("entity light buff is NULL\r\n");
+        return;
+    }
+    char* data_str = pvPortMalloc(data_len);
+    memset(data_str, 0, data_len);
+    sprintf(data_str, "%.*s", data_len, hs_data);
+    HA_LOG_F("hs_data %s\r\n", data_str);
+
+    if (light_entity->hs.hs_command_template==NULL) {
+        char* hs = strtok(data_str, ",");
+        if (hs)light_entity->hs.hue = atof(hs);
+        hs = strtok(NULL, ",");
+        if (hs) light_entity->hs.saturation = atof(hs);
+    }
+    vPortFree(data_str);
+}
+
+static void homeAssistant_get_light_brightness(ha_lh_entity_t* light_entity, const char* brightness_data, unsigned short data_len)
+{
+    if (light_entity==NULL || brightness_data==NULL) {
+        HA_LOG_E("entity light buff is NULL\r\n");
+        return;
+    }
+    light_entity->brightness.brightness = atoi(brightness_data);
+}
+
 #endif
 /**
  * @brief 传感器开关实体
@@ -1524,17 +1590,29 @@ ha_event_t homeAssistant_get_command(const char* topic, unsigned short topic_len
     ha_lh_entity_t* light_cur = ha_device->entity_light->light_list->next;
     while (light_cur!=ha_device->entity_light->light_list)
     {
-        if (!strncmp(topic, light_cur->rgb.rgb_command_topic, topic_len)) {
+         //识别开关信息
+         if (light_cur->command_topic!=NULL&&!strncmp(topic, light_cur->command_topic, topic_len)) {
+
+            if (light_cur->payload_on!=NULL)light_cur->light_state = strncmp(data, light_cur->payload_on, data_len)==0?true:false;
+            else light_cur->light_state = strncmp(data, "ON", data_len)==0?true:false;
+
+            event = HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH;
+            ha_device->entity_light->command_light = light_cur;
+            return event;
+        }
+        //识别RGB 信息
+        if (light_cur->rgb.rgb_command_topic!=NULL&&!strncmp(topic, light_cur->rgb.rgb_command_topic, topic_len)) {
             homeAssistant_get_light_rgb(light_cur, data, data_len);
             event = HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE;
             light_cur->light_state = true;
             ha_device->entity_light->command_light = light_cur;
             return event;
         }
-        else  if (!strncmp(topic, light_cur->command_topic, topic_len)) {
-            if (light_cur->payload_on!=NULL)light_cur->light_state = strncmp(data, light_cur->payload_on, data_len)?false:true;
-            else light_cur->light_state = strncmp(data, "ON", data_len)?false:true;
-            event = HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH;
+        //识别HS 信息
+        if (light_cur->hs.hs_command_topic!=NULL&&!strncmp(topic, light_cur->hs.hs_command_topic, topic_len)) {
+            homeAssistant_get_light_hs(light_cur, data, data_len);
+            light_cur->light_state = true;
+            event = HA_EVENT_MQTT_COMMAND_LIGHT_HS_UPDATE;
             ha_device->entity_light->command_light = light_cur;
             return event;
         }
@@ -2297,6 +2375,12 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
 #if CONFIG_ENTITY_ENABLE_LIGHT
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_LIGHT)) {
         ha_lh_entity_t* light_node = (ha_lh_entity_t*)ha_entity_list;
+
+        if (light_node->payload_on!=NULL && light_node->payload_off!=NULL)
+            ret_id = homeAssistant_mqtt_port_public(light_node->state_topic, state?light_node->payload_on:light_node->payload_off, 0, 0);
+        else {
+            ret_id = homeAssistant_mqtt_port_public(light_node->state_topic, state?"ON":"OFF", 0, 0);
+        }
         //上报RGB值
         if (light_node->rgb.rgb_command_topic!=NULL) {
             char* rgb_data = pvPortMalloc(16);
@@ -2308,10 +2392,16 @@ int homeAssistant_device_send_entity_state(char* entity_type, void* ha_entity_li
             }
             vPortFree(rgb_data);
         }
-        if (light_node->payload_on!=NULL && light_node->payload_off!=NULL)
-            ret_id = homeAssistant_mqtt_port_public(light_node->state_topic, state?light_node->payload_on:light_node->payload_off, 0, 1);
-        else {
-            ret_id = homeAssistant_mqtt_port_public(light_node->state_topic, state?"ON":"OFF", 0, 0);
+        //上报 HS 值
+        if (light_node->hs.hs_command_topic!=NULL) {
+            char* hs_data = pvPortMalloc(16);
+            if (light_node->hs.hs_value_template==NULL) {
+                memset(hs_data, 0, 16);
+                sprintf(hs_data, "%0.3f,%0.3f", light_node->hs.hue, light_node->hs.saturation);
+                ret_id = homeAssistant_mqtt_port_public(light_node->hs.hs_state_topic, hs_data, 0, 0);
+                if (ret_id<false) HA_LOG_E("publish is fali\r\n");
+            }
+            vPortFree(hs_data);
         }
     }
 #endif
@@ -2567,8 +2657,6 @@ int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, c
 #if CONFIG_ENTITY_ENABLE_LIGHT
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_LIGHT)) {
         ha_lh_entity_t* light_node = (ha_lh_entity_t*) homeAssistant_fine_entity(entity_type, unique_id);;
-        
-        
         //上报开关值
         if(strncmp(data,light_node->payload_on, strlen(light_node->payload_on))==0||strncmp(data,light_node->payload_off,strlen(light_node->payload_off))==0)
         {
@@ -2616,8 +2704,6 @@ int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, c
     if (!strcmp(entity_type, CONFIG_HA_ENTITY_TEXT)) {
         ha_text_entity_t* text_node = (ha_text_entity_t*)homeAssistant_fine_entity(entity_type, unique_id);
         if (data!=NULL&& text_node->state_topic!=NULL) {
-            
-            
             ret_id = homeAssistant_mqtt_port_public(text_node->state_topic,data, 0, 1);
             if(text_node->text_value==NULL)
                 text_node->text_value=pvPortMalloc(256);
@@ -2646,6 +2732,8 @@ int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, c
 
         if (strcmp(data, "0FF")!=0 && strcmp(data, "ON")!=0) {
             //返回模式
+            ret_id = homeAssistant_mqtt_port_public(climateHVAC_node->mode_state_topic, data, 0, 1);
+
             if (climateHVAC_node->mode_state_topic!=NULL &&climateHVAC_node->modes[0]==NULL) {
                 for (size_t i = 0; i < 6;i++)
                 {
@@ -2664,8 +2752,27 @@ int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, c
             }
         }
         else {
-            if (climateHVAC_node->mode_state_topic!=NULL ) {
-                ret_id = homeAssistant_mqtt_port_public(climateHVAC_node->mode_state_topic, data, 0, 1);
+           
+             //发送温度值
+            if(*data>='0'&&*data<='9'){
+                ret_id = homeAssistant_mqtt_port_public(climateHVAC_node->temperature_state_topic, data, 0, 1);
+            }else{
+                if (climateHVAC_node->mode_state_topic!=NULL ) {
+                    if (climateHVAC_node->mode_state_topic!=NULL &&climateHVAC_node->modes[0]==NULL) {
+                        for (size_t i = 0; i < 6;i++)
+                        {
+                           if(strncmp(data, modes_def[i], strlen(modes_def[i]))==0) {
+                            ret_id = homeAssistant_mqtt_port_public(climateHVAC_node->mode_state_topic, modes_def[i], 0, 1);
+                           }
+                        }   
+                    }
+                    else {
+                       
+                         ret_id = homeAssistant_mqtt_port_public(climateHVAC_node->mode_state_topic, climateHVAC_node->modes[i], 0, 1);
+                           
+                        }   
+                }
+            }
         }
     }
 #endif

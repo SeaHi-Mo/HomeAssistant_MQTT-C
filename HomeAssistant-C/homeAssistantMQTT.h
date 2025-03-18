@@ -32,6 +32,10 @@ typedef enum {
 #if CONFIG_ENTITY_ENABLE_LIGHT
     HA_EVENT_MQTT_COMMAND_LIGHT_SWITCH,//light 灯的开关事件
     HA_EVENT_MQTT_COMMAND_LIGHT_RGB_UPDATE,//light 灯的RGB 颜色下发事件
+    HA_EVENT_MQTT_COMMAND_LIGHT_RGBW_UPDATE,
+    HA_EVENT_MQTT_COMMAND_LIGHT_RGBWW_UPDATE,
+    HA_EVENT_MQTT_COMMAND_LIGHT_HS_UPDATE,
+    HA_EVENT_MQTT_COMMAND_LIGHT_XY_UPDATE,
     HA_EVENT_MQTT_COMMAND_LIGHT_BRIGHTNESS,//light 灯的亮度数据下发事件
 #endif
 #if CONFIG_ENTITY_ENABLE_TEXT
@@ -162,6 +166,7 @@ struct light_color_temp_t {
     char* color_temp_command_topic; //   颜色温度命令主题
     char* color_temp_state_topic; //  定义一个结构体，用于存储颜色温度相关的信息
     char* color_temp_value_template; //  定义一个结构体，用于存储颜色温度相关的信息
+    char* color_mode; //  颜色模式
 };
 
 struct light_effect_t {
@@ -177,8 +182,8 @@ struct light_hs_t {
     char* hs_command_topic;
     char* hs_state_topic;
     char* hs_value_template;
-    unsigned short int hue;
-    unsigned short int saturation;
+    float hue;
+    float saturation;
 };
 
 struct light_rgb_t {
@@ -844,6 +849,7 @@ typedef struct homeAssisatnt_device {
     char* payload_available;
     char* payload_not_available;
     homeAssisatnt_netinfo_t wifi_info;
+
 #if CONFIG_ENTITY_ENABLE_SWITCH
     ha_swlist_t* entity_switch;
 #endif

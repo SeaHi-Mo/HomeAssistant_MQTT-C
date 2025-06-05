@@ -39,7 +39,7 @@ int homeAssistant_device_quickly_send_data(char* entity_type, char* unique_id, c
 |[Camera](#camera)| CONFIG_HA_ENTITY_CAMERA | 摄像头实体 |:x:|
 |[Cover](#cover)| CONFIG_HA_ENTITY_COVER | 门类实体，窗帘、车门等 |:x:|
 |[Device tracker](#device-tracker)| CONFIG_HA_ENTITY_DEVICE_TRACKER | 跟踪器实体，GPS定位等 |:x:|
-|[Device Trigger](#device-trigger)| CONFIG_HA_ENTITY_DEVICE_TRIGGER | 触发器实体 |:x:|white_check_mark:|
+|[Device Trigger](#device-trigger)| CONFIG_HA_ENTITY_DEVICE_TRIGGER | 触发器实体 |:white_check_mark:|
 |[Event](#event)|CONFIG_HA_ENTITY_EVENT | 事件实体 |:x:|
 |[Fan](#fan)|CONFIG_HA_ENTITY_FAN | 风扇实体 |:x:|
 |[Humidifier](#humidifier) |CONFIG_HA_ENTITY_HUMIDIFIER | 加湿器实体 |:x:|
@@ -104,7 +104,7 @@ Switch 实体是HomeAssistant中的一种设备类型，用于表示可以打开
 Switch实体，在HomeAssistant_MQTT-C 中，需要通过以下方式创建实体：
 - 1. 创建 Switch 实体信息结构体，并初始化。必填参数有`name`、`unique_id`，其他参数可选。<br>
 ```c
-static ha_sw_entity_t sw = {
+ ha_sw_entity_t sw = {
                 .name = "开关",
                 .unique_id = "sw_1",
                 .icon = "mdi:power",//图标：可选
@@ -112,7 +112,7 @@ static ha_sw_entity_t sw = {
 ```
 - 2. 调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
 ```c
-static ha_sw_entity_t sw = {
+ ha_sw_entity_t sw = {
                 .name = "开关",
                 .unique_id = "sw_1",
                .icon = "mdi:power",
@@ -214,14 +214,14 @@ Sensor 实体是HomeAssistant中的一种设备类型，用于表示可以测量
 Sensor实体，在HomeAssistant_MQTT-C 中，需要通过以下方式创建实体：
 - 1. 创建 Sensor 实体信息结构体，并初始化。必填参数有`name`、`unique_id`其他参数可选。<br>
   ```c
-  static ha_sensor_entity_t sensor = {
+   ha_sensor_entity_t sensor = {
                 .name = "温度",
                 .unique_id = "sensor_1",
             };
   ```
 - 2. 调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
   ```c
-  static ha_sensor_entity_t sensor = {
+   ha_sensor_entity_t sensor = {
                 .name = "温度",
                 .unique_id = "sensor_1",
             };
@@ -358,7 +358,7 @@ Bianry sensor 需要开启`CONFIG_ENTITY_ENABLE_BINARY_SENSOR`资源，需要通
 
 - 1. 创建实体，例如门磁开关，在创建实体时，需要设置`name`和`unique_id`两个必选参数，例如：
   ```c
-  static ha_Bsensor_entity_t sensor = {
+   ha_Bsensor_entity_t sensor = {
                 .name = "门磁开关",
                 .unique_id = "sensor_1",
             };
@@ -366,7 +366,7 @@ Bianry sensor 需要开启`CONFIG_ENTITY_ENABLE_BINARY_SENSOR`资源，需要通
   > 其中,`name`为实体名称，`unique_id`为实体唯一标识，`unique_id`必须为全局唯一，不能重复。
 - 2. 调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
   ```c
-    static ha_Bsensor_entity_t sensor = {
+     ha_Bsensor_entity_t sensor = {
                 .name = "门磁开关",
                 .unique_id = "sensor_1",
 
@@ -472,7 +472,7 @@ Light 需要开启`CONFIG_ENTITY_ENABLE_LIGHT`资源，需要通过以下方式�
 
 - 1. 创建实体信息,需要把light 的信息填写完整(结构体:ha_lh_entity_t)，如：
   ```c
-   static ha_lh_entity_t light = {
+    ha_lh_entity_t light = {
                 .name = "灯",
                 .unique_id = "light_1",
                 .rgb.rgb_command_topic = "light_1/rgb/set",
@@ -486,7 +486,7 @@ Light 需要开启`CONFIG_ENTITY_ENABLE_LIGHT`资源，需要通过以下方式�
 
 - 2. 调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
   ```c
-   static ha_lh_entity_t light = {
+    ha_lh_entity_t light = {
                 .name = "灯",
                 .unique_id = "light_1",
                 .rgb.rgb_command_topic = "light_1/rgb/set",
@@ -617,7 +617,7 @@ Text 需要开启`CONFIG_ENTITY_ENABLE_TEXT`资源，需要通过以下方式开
 > - 2.必须设备上线之前创建好实体，否则设备上线后，HomeAssistant无法识别实体。<br>
 - 1. 创建实体,需要通过`ha_text_entity_t`结构体来创建实体,如:
   ```c
-  static ha_text_entity_t text = {
+   ha_text_entity_t text = {
                 .name = "文本",
                 .unique_id = "text_1",
   };
@@ -629,7 +629,7 @@ Text 需要开启`CONFIG_ENTITY_ENABLE_TEXT`资源，需要通过以下方式开
 
 - 2.  调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
   ```c
-  static ha_text_entity_t text = {
+   ha_text_entity_t text = {
                 .name = "文本",
                 .unique_id = "text_1",
   };
@@ -712,14 +712,14 @@ Number 需要开启`CONFIG_ENTITY_ENABLE_NUMBER`资源，需要通过以下方�
 
 - 1. 创建实体,需要通过`ha_number_entity_t`结构体来创建实体,如:
   ```c
-  static ha_number_entity_t number = {
+   ha_number_entity_t number = {
                 .name = "数字",
                 .unique_id = "number_1",
   };
   ```
 - 2.  调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
   ```c
-  static ha_number_entity_t number = {
+   ha_number_entity_t number = {
                 .name = "数字",
                 .unique_id = "number_1",
   };
@@ -815,7 +815,7 @@ Number 需要开启`CONFIG_ENTITY_ENABLE_CLIMATE_HVAC`资源，需要通过以�
 
 - 1. 创建实体,先需要通过`ha_climateHVAC_t`结构体来创建实体,如:
   ```c
-  static ha_climateHVAC_t hvac = {
+   ha_climateHVAC_t hvac = {
                 .name = "卧室空调",
                 .unique_id = "hvac_1",
                 .max_temp = 30,
@@ -824,7 +824,7 @@ Number 需要开启`CONFIG_ENTITY_ENABLE_CLIMATE_HVAC`资源，需要通过以�
   ```
   - 1. 创建支持0.5度步长的空调实体，需要设置`temp_step`为`0.5`，如：
   ```c
-  static ha_climateHVAC_t hvac = {
+   ha_climateHVAC_t hvac = {
                 .name = "卧室空调",
                 .unique_id = "hvac_1",
                 .max_temp = 30,
@@ -836,7 +836,7 @@ Number 需要开启`CONFIG_ENTITY_ENABLE_CLIMATE_HVAC`资源，需要通过以�
 
 - 2.  调用`homeAssistant_device_add_entity`函数，将实体添加到设备中，如：
   ```c
-   static ha_climateHVAC_t hvac = {
+    ha_climateHVAC_t hvac = {
                 .name = "卧室空调",
                 .unique_id = "hvac_1",
                 .max_temp = 30,
@@ -1058,7 +1058,7 @@ Select 需要开启`CONFIG_ENTITY_ENABLE_SELECT`资源，需要通过以下方�
   如：
   ```c
     static char* options[3] = { "1","2","3" }; 
-    static ha_select_t select = {
+     ha_select_t select = {
                 .name = "select",
                 .unique_id = "select_1",
                 .options = options,
@@ -1069,7 +1069,7 @@ Select 需要开启`CONFIG_ENTITY_ENABLE_SELECT`资源，需要通过以下方�
 - 2. 添加实体，需要使用`homeAssistant_device_add_entity`函数，如：
   ```c
     static char* options[3] = { "1","2","3" };
-            static ha_select_t select = {
+             ha_select_t select = {
                 .name = "select",
                 .unique_id = "select_1",
                 .options = options,
@@ -1156,14 +1156,14 @@ Button 需要开启`CONFIG_ENTITY_ENABLE_BUTTONT`资源，需要通过以下方�
 
 - 1.  创建Button实体,需要先创建ha_btn_entity_t结构体.
   ```c
-  static ha_btn_entity_t btn = {
+   ha_btn_entity_t btn = {
                 .name = "btn",
                 .unique_id = "btn_1",
             };
   ```
 - 2. 利用`homeAssistant_device_add_entity`将实体添加到设备中,如：
   ```c
-    static ha_btn_entity_t btn = {
+     ha_btn_entity_t btn = {
                 .name = "btn",
                 .unique_id = "btn_1",
             };
@@ -1239,14 +1239,14 @@ Device Trigger 需要开启`CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER`资源，需要�
 
 - 1.  创建Device Trigger实体,需要先创建ha_devTrig_entity_t结构体.如：<br>
   ```c
-    static ha_devTrig_entity_t trig_entity = {
+     ha_devTrig_entity_t trig_entity = {
                 .type = BUTTON_SHORT_RELEASE,
                 .subtype = "botton_1"
             };
   ```
 - 2. 利用`homeAssistant_device_add_entity`将实体添加到设备中,如：<br>
   ```c
-    static ha_devTrig_entity_t trig_entity = {
+     ha_devTrig_entity_t trig_entity = {
                 .type = BUTTON_SHORT_RELEASE,
                 .subtype = "botton_1"
             };
@@ -1292,7 +1292,7 @@ Device Trigger 需要开启`CONFIG_ENTITY_ENABLE_DEVICE_TRIGGER`资源，需要�
 
 Device Trigger 只有发送功能，只支持设备向HomeAssistant发送消息，不支持HomeAssistant向设备发送消息。设备会通过响应的实体信息向HomeAssistant相应的`type`。只需要使用`homeAssistant_device_send_entity_state`函数发送即可。如：
 ```c
-static ha_devTrig_entity_t trig_entity = {
+ ha_devTrig_entity_t trig_entity = {
                 .type = BUTTON_SHORT_RELEASE,
                 .subtype = "botton_1"
             };
@@ -1320,7 +1320,7 @@ Scene 需要开启`CONFIG_ENTITY_ENABLE_SCENE`资源，需要通过以下方式�
 
 - 1.  创建Scene实体,需要先创建ha_scene_entity_t结构体.如：<br>
   ```c
-    static ha_scene_entity_t trig_entity = {
+     ha_scene_entity_t trig_entity = {
                .name = "回家模式",
               .unique_id = "scene_01",
             };
@@ -1328,7 +1328,7 @@ Scene 需要开启`CONFIG_ENTITY_ENABLE_SCENE`资源，需要通过以下方式�
 
 - 2. 利用`homeAssistant_device_add_entity`将实体添加到设备中,如：<br>
   ```c
-     static ha_scene_entity_t scene_entity = {
+      ha_scene_entity_t scene_entity = {
                .name = "回家模式",
               .unique_id = "scene_01",
             };
@@ -1389,7 +1389,7 @@ static void ha_event_cb(ha_event_t event, homeAssisatnt_device_t* ha_dev)
 
 icon 即图标，每个实体你都可以自定义icon,让实体看起来更加美观。而你只需要在实体配置中添加`icon`字段即可,名称前缀为 mdi:，即 mdi:home。 例如：
 ```c
-static ha_sensor_entity_t sensor = {
+ ha_sensor_entity_t sensor = {
                 .name = "温度",
                 .unique_id = "sensor_1",
                 .icon = "mdi:thermometer",
